@@ -1,230 +1,18 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-site="books">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Book Admin</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
-
-        :root {
-            --bg: #1a1510;
-            --panel: #131008;
-            --input-bg: #2e2518;
-            --border: #3d2409;
-            --text: #f5ead8;
-            --dim: #8a7a66;
-            --accent: #c4993f;
-            --accent-light: #e2c97e;
-            --color-red: #e05a4a;
-            --color-green: #6fbf73;
-        }
-
-        * { box-sizing: border-box; }
-
-        body {
-            background-color: var(--bg);
-            color: var(--text);
-            font-family: "Outfit", sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 24px 16px;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            color: var(--accent);
-            margin-top: 0;
-            text-align: center;
-        }
-
-        /* --- LOGIN --- */
-        #login-screen { text-align: center; }
-        .access-btn-group {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 8px;
-            margin-top: 20px;
-        }
-        .access-btn-group input { text-align: center; width: 280px; max-width: 100%; }
-        .hint {
-            font-size: 0.75rem;
-            color: var(--dim);
-            margin: 0 0 6px;
-            text-align: left;
-            width: 280px;
-            max-width: 100%;
-            line-height: 1.4;
-        }
-
-        /* --- PANEL --- */
-        #admin-panel {
-            display: none;
-            width: 640px;
-            max-width: 100%;
-            background: var(--panel);
-            padding: 40px;
-            border-radius: 20px;
-            border: 1px solid var(--border);
-            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-        }
-        @media (max-width: 500px) { #admin-panel { padding: 24px 18px; } }
-
-        .form-group { margin-bottom: 20px; }
-        .form-row { display: flex; gap: 12px; flex-wrap: wrap; }
-        .form-row .form-group { flex: 1 1 140px; }
-
-        label {
-            display: block;
-            margin-bottom: 8px;
-            font-size: 0.8rem;
-            color: var(--dim);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        input, textarea, select {
-            width: 100%;
-            padding: 12px;
-            background: var(--input-bg);
-            border: 1px solid var(--border);
-            color: var(--text);
-            border-radius: 8px;
-            font-family: inherit;
-            font-size: 1rem;
-        }
-        input:focus, textarea:focus, select:focus { outline: none; border-color: var(--accent); }
-        input::placeholder, textarea::placeholder { color: #6b5d4c; }
-
-        button {
-            width: 100%;
-            padding: 15px;
-            background: var(--accent);
-            color: #1a1510;
-            border: none;
-            border-radius: 8px;
-            font-weight: bold;
-            font-size: 1rem;
-            font-family: inherit;
-            cursor: pointer;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-top: 10px;
-        }
-        button:hover { opacity: 0.9; }
-        button:disabled { opacity: 0.5; cursor: not-allowed; }
-
-        .link-btn {
-            background: none;
-            border: none;
-            color: var(--accent);
-            padding: 0;
-            margin: 8px 0 0;
-            width: auto;
-            font-size: 0.8rem;
-            font-weight: normal;
-            text-transform: none;
-            letter-spacing: 0;
-            text-decoration: underline;
-        }
-
-        .back-link {
-            display: block; text-align: center; margin-top: 12px; padding: 12px;
-            border: 1px solid var(--border); border-radius: 8px; color: var(--dim);
-            font-size: 0.85rem; text-decoration: none; letter-spacing: 1px; text-transform: uppercase;
-            transition: 0.2s;
-        }
-        .back-link:hover { border-color: var(--accent); color: var(--accent); }
-
-        /* --- SEARCH --- */
-        .search-wrapper { position: relative; }
-        #search-input { padding-right: 36px; }
-
-        .search-spinner {
-            position: absolute; right: 12px; top: 50%;
-            width: 16px; height: 16px;
-            border: 2px solid #444; border-top-color: var(--accent); border-radius: 50%;
-            transform: translateY(-50%);
-            animation: spin 0.7s linear infinite;
-            display: none;
-        }
-        @keyframes spin { to { transform: translateY(-50%) rotate(360deg); } }
-
-        #search-dropdown {
-            position: absolute; top: calc(100% + 4px); left: 0; right: 0;
-            background: #1e1810;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            max-height: 380px;
-            overflow-y: auto;
-            z-index: 100;
-            display: none;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-        }
-        .search-result-item {
-            display: flex; align-items: center; gap: 12px;
-            padding: 10px 14px;
-            cursor: pointer;
-            border-bottom: 1px solid #2a2117;
-            transition: background 0.15s;
-        }
-        .search-result-item:last-child { border-bottom: none; }
-        .search-result-item:hover, .search-result-item.highlighted { background: var(--input-bg); }
-        .result-cover, .result-cover-placeholder {
-            width: 36px; height: 54px; border-radius: 3px; background: #333; flex-shrink: 0; object-fit: cover;
-        }
-        .result-cover-placeholder { display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
-        .result-info { flex: 1; min-width: 0; }
-        .result-title { font-weight: 600; font-size: 0.95rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .result-meta { font-size: 0.8rem; color: var(--dim); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .result-badge {
-            font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: bold;
-            text-transform: uppercase; flex-shrink: 0; letter-spacing: 0.5px;
-        }
-        .badge-google { background: rgba(196,153,63,0.2); color: var(--accent-light); }
-        .badge-ol     { background: rgba(111,191,115,0.15); color: var(--color-green); }
-        .dropdown-note { padding: 12px 14px; text-align: center; color: var(--dim); font-size: 0.85rem; }
-
-        /* --- DETAILS --- */
-        #details { display: none; margin-top: 28px; padding-top: 24px; border-top: 1px solid var(--border); }
-        .details-top { display: flex; gap: 20px; align-items: flex-start; margin-bottom: 20px; }
-        .cover-box {
-            width: 110px; aspect-ratio: 2 / 3; flex-shrink: 0;
-            background: var(--input-bg); border-radius: 4px; overflow: hidden;
-            display: flex; align-items: center; justify-content: center;
-            color: var(--dim); font-size: 0.75rem; text-align: center; padding: 6px;
-        }
-        .cover-box img { width: 100%; height: 100%; object-fit: cover; display: block; }
-        .details-top-fields { flex: 1; min-width: 0; }
-        .details-top-fields .form-group { margin-bottom: 12px; }
-        @media (max-width: 500px) {
-            .details-top { flex-direction: column; align-items: center; }
-            .details-top-fields { width: 100%; }
-        }
-
-        .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
-        .chip {
-            font-size: 0.75rem; padding: 4px 10px; border-radius: 999px;
-            border: 1px solid var(--border); color: var(--dim); background: transparent;
-            cursor: pointer; width: auto; margin: 0; text-transform: none; letter-spacing: 0; font-weight: normal;
-        }
-        .chip.on { background: rgba(196,153,63,0.2); border-color: var(--accent); color: var(--accent-light); }
-
-        /* --- STATUS --- */
-        #status-msg {
-            margin-top: 20px; padding: 12px 16px; border-radius: 8px;
-            font-size: 0.95rem; display: none; text-align: center;
-        }
-        #status-msg.success { background: rgba(111,191,115,0.12); color: var(--color-green); border: 1px solid var(--color-green); }
-        #status-msg.error   { background: rgba(224,90,74,0.12);  color: var(--color-red);   border: 1px solid var(--color-red); }
-        #status-msg.loading { background: rgba(196,153,63,0.12); color: var(--accent);      border: 1px solid var(--accent); }
-    </style>
+    <link rel="stylesheet" href="/assets/theme.css">
+    <link rel="stylesheet" href="/assets/admin.css">
 </head>
 <body>
+<div class="admin-shell">
+    <nav class="site-switch" aria-label="Switch site">
+        <a href="/" class="site-switch-home">Chao's Lists</a>
+        <div class="site-switch-tabs"><a href="/movies/admin.html"><span class="swatch swatch-movies"></span>Movies</a><a href="/books/admin.html" class="active" aria-current="page"><span class="swatch swatch-books"></span>Books</a></div>
+    </nav>
 
     <!-- 1. LOGIN -->
     <div id="login-screen">
@@ -232,7 +20,7 @@
         <div class="access-btn-group">
             <input type="password" id="password-input" placeholder="Secret Key">
             <input type="password" id="token-input" placeholder="GitHub Token">
-            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the BookSite repo.</p>
+            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the cm-nai-rien.github.io repo. Works for both admin pages.</p>
             <input type="password" id="gkey-input" placeholder="Google Books API Key (optional)">
             <p class="hint">Free key from console.cloud.google.com (Books API). Without it, Google search can hit a shared daily limit. Remembered in this browser.</p>
             <button onclick="checkAccess()" style="width: 200px; margin-top: 12px;">Enter</button>
@@ -323,11 +111,13 @@
         <a href="index.html" class="back-link">← Back to Book List</a>
         <div id="status-msg"></div>
     </div>
+</div>
 
     <script>
         const SECRET_KEY  = 'chaos';
-        const GITHUB_REPO = 'cm-nai-rien/BookSite';
-        const BOOKS_FILE  = 'books.json';
+        const GITHUB_REPO = 'cm-nai-rien/cm-nai-rien.github.io';
+        const BOOKS_FILE  = 'books.json';        // read by the page (same folder)
+        const BOOKS_PATH  = 'books/books.json';  // path inside the GitHub repo
 
         let githubToken = '';
         let googleKey = '';
@@ -344,6 +134,7 @@
 
         $('token-input').value = storageGet(sessionStorage, 'adminToken');
         $('gkey-input').value  = storageGet(localStorage, 'googleBooksKey');
+        if ($('token-input').value) enterPanel($('token-input').value, $('gkey-input').value);
 
         // ---------------------------------------------------------------
         // 1. LOGIN
@@ -353,6 +144,17 @@
         // that isn't plain visible ASCII.
         function cleanKey(raw) {
             return raw.normalize('NFKC').replace(/[^\x21-\x7E]/g, '');
+        }
+
+        function enterPanel(tok, gkey) {
+            githubToken = cleanKey(tok);
+            googleKey = cleanKey(gkey || '');
+            storageSet(sessionStorage, 'adminToken', githubToken);
+            storageSet(localStorage, 'googleBooksKey', googleKey);
+            $('login-screen').style.display = 'none';
+            $('admin-panel').style.display = 'block';
+            $('search-input').focus();
+            loadKnownGenres();
         }
 
         function checkAccess() {
@@ -365,15 +167,8 @@
                     err.innerText = 'That GitHub token looks wrong. It should start with github_pat_ — try copying it again.';
                     return;
                 }
-                githubToken = tok;
                 $('token-input').value = tok;
-                googleKey = cleanKey($('gkey-input').value);
-                storageSet(sessionStorage, 'adminToken', tok);
-                storageSet(localStorage, 'googleBooksKey', googleKey);
-                $('login-screen').style.display = 'none';
-                $('admin-panel').style.display = 'block';
-                $('search-input').focus();
-                loadKnownGenres();
+                enterPanel(tok, cleanKey($('gkey-input').value));
             } else {
                 $('error-msg').style.display = 'block';
                 $('error-msg').innerText = !tok ? 'GitHub token required' : 'Access Denied';
@@ -687,7 +482,7 @@
             setStatus('Saving to GitHub…', 'loading');
 
             try {
-                const api = `https://api.github.com/repos/${GITHUB_REPO}/contents/${BOOKS_FILE}`;
+                const api = `https://api.github.com/repos/${GITHUB_REPO}/contents/${BOOKS_PATH}`;
                 const headers = { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github+json' };
 
                 const getRes = await fetch(api, { headers, cache: 'no-store' });

@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd \"/Users/ed009/Documents/Visual Studio Code/MovieSite\" && git pull origin main 2>&1 | tail -3",
+            "command": "git -C \"$CLAUDE_PROJECT_DIR\" pull --ff-only origin main 2>&1 | tail -3",
             "statusMessage": "Pulling latest from GitHub…",
             "timeout": 30
           }

@@ -1,0 +1,143 @@
+/* ==========================================================================
+   Chao's Lists — shared design system
+   Every page links this file. Set the palette with data-site on <html>
+   (or on any element): data-site="movies" or data-site="books".
+   Shared rules use the role tokens (--c-*) so each site keeps its own colors.
+   ========================================================================== */
+
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
+
+/* --- PALETTES ------------------------------------------------------------ */
+
+[data-site="movies"] {
+    --color-olive-dark:   #353308;
+    --color-olive-medium: #5c5815;
+    --color-olive-light:  #C6BF65;
+    --color-pink:         #EECED3;
+    --color-red:          #ff4757;
+    --color-black:        #050505;
+    --color-gray-dark:    #111111;
+    --color-gray-medium:  #1a1a1a;
+    --color-gray-light:   #333333;
+    --color-gray-lighter: #888888;
+
+    --c-deep:        var(--color-olive-dark);
+    --c-deep-rgb:    53, 51, 8;
+    --c-mid:         var(--color-olive-medium);
+    --c-accent:      var(--color-olive-light);
+    --c-accent-soft: var(--color-olive-light);
+    --c-ink:         var(--color-pink);
+    --c-paper-shade: #e3c3c9;
+    --c-alert:       var(--color-red);
+}
+
+[data-site="books"] {
+    --color-brown-dark:   #3d2409;
+    --color-brown-medium: #6b4523;
+    --color-gold:         #c4993f;
+    --color-gold-light:   #e2c97e;
+    --color-parchment:    #f5ead8;
+    --color-red:          #c0392b;
+    --color-black:        #0b0806;
+    --color-gray-dark:    #131008;
+    --color-gray-medium:  #1a1510;
+    --color-gray-light:   #2e2518;
+    --color-gray-lighter: #8a7a66;
+
+    --c-deep:        var(--color-brown-dark);
+    --c-deep-rgb:    61, 36, 9;
+    --c-mid:         var(--color-brown-medium);
+    --c-accent:      var(--color-gold);
+    --c-accent-soft: var(--color-gold-light);
+    --c-ink:         var(--color-parchment);
+    --c-paper-shade: #e8dcc8;
+    --c-alert:       var(--color-red);
+}
+
+/* --- TOKENS (same names on both sites) ----------------------------------- */
+
+[data-site] {
+    --color-white:     #ffffff;
+    --color-white-dim: #dddddd;
+
+    --bg-page:       var(--color-gray-medium);
+    --bg-card:       transparent;
+    --bg-featured:   var(--c-ink);
+    --bg-ui:         var(--color-gray-dark);
+    --bg-panel:      #fcfcfc;
+    --bg-overlay:    rgba(var(--c-deep-rgb), 0.85);
+
+    --text-primary:  var(--c-ink);
+    --text-inverted: var(--color-gray-medium);
+    --text-dim:      var(--c-ink);
+    --text-accent:   var(--c-ink);
+    --text-panel:    var(--color-gray-dark);
+
+    --border-ui:     var(--c-deep);
+    --border-light:  #e0e0e0;
+
+    --shadow-retro:  10px 10px 0px rgba(var(--c-deep-rgb), 0.2);
+    --shadow-panel:  -5px 0 30px rgba(0,0,0,0.2);
+    --shadow-card:   0 10px 20px rgba(0,0,0,0.1);
+
+    --font-display:  'Playfair Display', Georgia, serif;
+    --font-body:     'Outfit', system-ui, sans-serif;
+}
+
+/* --- SITE SWITCH (Movies | Books) ---------------------------------------- */
+
+.site-switch {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    width: 90%;
+    max-width: 1600px;
+    margin: 0 auto;
+    padding: 18px 0 0;
+    font-family: var(--font-body);
+    color: var(--text-primary);
+}
+
+.site-switch-home {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    color: inherit;
+    text-decoration: none;
+    opacity: 0.6;
+    transition: opacity 0.2s;
+}
+.site-switch-home:hover { opacity: 1; }
+
+.site-switch-tabs { display: flex; gap: 4px; }
+
+.site-switch-tabs a {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 5px 12px;
+    font-size: 0.75rem;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    color: inherit;
+    text-decoration: none;
+    border: 1px solid transparent;
+    opacity: 0.55;
+    transition: opacity 0.2s, border-color 0.2s;
+}
+.site-switch-tabs a:hover { opacity: 1; }
+.site-switch-tabs a.active {
+    opacity: 1;
+    border-color: currentColor;
+}
+
+/* Each tab carries a tiny swatch of its own site's palette */
+.swatch {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+.swatch-movies { background: linear-gradient(135deg, #C6BF65 50%, #EECED3 50%); }
+.swatch-books  { background: linear-gradient(135deg, #c4993f 50%, #f5ead8 50%); }

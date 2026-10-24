@@ -1,20 +1,16 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-site="books">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Book Analytics</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="/assets/theme.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&family=Playfair+Display:ital,wght@0,400..900;1,400..900&display=swap');
 
         :root {
-            --color-brown-dark:   #3d2409;
-            --color-brown-medium: #6b4523;
-            --color-gold:         #c4993f;
-            --color-parchment:    #f5ead8;
-            --text-primary:       #3d2409;
-            --bg-page:            #c4993f;
+            --text-primary: var(--c-deep);
+            --bg-page:      var(--c-accent);
         }
 
         body {
@@ -124,6 +120,11 @@
     </style>
 </head>
 <body>
+
+    <nav class="site-switch" aria-label="Switch site">
+        <a href="/" class="site-switch-home">Chao's Lists</a>
+        <div class="site-switch-tabs"><a href="/movies/"><span class="swatch swatch-movies"></span>Movies</a><a href="/books/" class="active" aria-current="page"><span class="swatch swatch-books"></span>Books</a></div>
+    </nav>
 
     <header>
         <h1>Book Analytics</h1>

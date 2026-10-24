@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en" data-site="movies">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chao's Lists</title>
+    <link rel="stylesheet" href="/assets/theme.css">
+    <style>
+        * { box-sizing: border-box; }
+
+        body {
+            position: relative;
+            margin: 0;
+            min-height: 100vh;
+            background: #0b0b0b;
+            font-family: var(--font-body);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .split {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            min-height: 100vh;
+        }
+
+        .half {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 28px;
+            padding: 72px 8%;
+            background: var(--bg-page);
+            color: var(--text-primary);
+            text-decoration: none;
+            overflow: hidden;
+        }
+        .half::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(var(--c-deep-rgb), 0.35);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .half:hover::after { opacity: 1; }
+
+        .eyebrow {
+            font-size: 0.75rem;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.6;
+        }
+
+        .half h2 {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: -2px;
+            font-size: clamp(3rem, 7vw, 5.5rem);
+            line-height: 1;
+            margin: 0;
+        }
+
+        .stat {
+            font-size: 1rem;
+            font-weight: 300;
+        }
+        .stat strong { font-weight: 500; }
+
+        .covers {
+            display: flex;
+            height: 190px;
+            align-items: flex-end;
+        }
+        .covers img {
+            width: 112px;
+            aspect-ratio: 2 / 3;
+            object-fit: cover;
+            margin-right: -36px;
+            box-shadow: var(--shadow-retro);
+            background: var(--color-gray-light);
+            transition: transform 0.3s;
+        }
+        .covers img:nth-child(odd)  { transform: rotate(-3deg); }
+        .covers img:nth-child(even) { transform: rotate(2deg) translateY(-8px); }
+        .half:hover .covers img { transform: none; }
+
+        .latest {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: 1.05rem;
+            border-left: 2px solid var(--c-accent);
+            padding-left: 14px;
+            max-width: 32rem;
+            min-height: 1.6em;
+        }
+        .latest span {
+            display: block;
+            font-family: var(--font-body);
+            font-style: normal;
+            font-size: 0.7rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+
+        .cta {
+            font-size: 0.8rem;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            border-bottom: 1px solid currentColor;
+            align-self: flex-start;
+            padding-bottom: 2px;
+        }
+
+        .masthead {
+            position: absolute;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: 1rem;
+            color: #f0ebe3;
+            white-space: nowrap;
+            mix-blend-mode: difference;
+            pointer-events: none;
+        }
+
+        .footer-note {
+            position: absolute;
+            bottom: 18px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 2;
+            font-size: 0.7rem;
+            color: #f0ebe3;
+            opacity: 0.5;
+            mix-blend-mode: difference;
+        }
+
+        @media (max-width: 760px) {
+            .split { grid-template-columns: 1fr; }
+            .half { min-height: 70vh; padding: 64px 24px 48px; }
+            .covers { height: 150px; }
+            .covers img { width: 88px; margin-right: -28px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="masthead">Chao's Lists</div>
+
+    <main class="split">
+        <a class="half" data-site="movies" href="/movies/">
+            <div class="eyebrow">Watched</div>
+            <h2>Movies</h2>
+            <div class="covers" id="movies-covers"></div>
+            <div class="stat" id="movies-stat">&nbsp;</div>
+            <div class="latest" id="movies-latest"></div>
+            <div class="cta">Open the movie list →</div>
+        </a>
+
+        <a class="half" data-site="books" href="/books/">
+            <div class="eyebrow">Read</div>
+            <h2>Books</h2>
+            <div class="covers" id="books-covers"></div>
+            <div class="stat" id="books-stat">&nbsp;</div>
+            <div class="latest" id="books-latest"></div>
+            <div class="cta">Open the book list →</div>
+        </a>
+    </main>
+
+    <div class="footer-note">© 2026 Chao Wu</div>
+
+    <script>
+        const SITES = [
+            { key: 'movies', file: '/movies/movies.json', image: 'poster', noun: ['film', 'films'], verb: 'Last watched' },
+            { key: 'books',  file: '/books/books.json',   image: 'cover',  noun: ['book', 'books'], verb: 'Last read' },
+        ];
+
+        SITES.forEach(async site => {
+            try {
+                const items = await (await fetch(site.file, { cache: 'no-store' })).json();
+                items.sort((a, b) => String(b.date_sort).localeCompare(String(a.date_sort)));
+
+                const year = String(new Date().getFullYear());
+                const thisYear = items.filter(i => String(i.date_sort).startsWith(year)).length;
+                const n = items.length;
+                document.getElementById(`${site.key}-stat`).innerHTML =
+                    `<strong>${n}</strong> ${site.noun[n === 1 ? 0 : 1]} logged · <strong>${thisYear}</strong> this year`;
+
+                const withImage = items.filter(i => i[site.image] && !String(i[site.image]).endsWith('null'));
+                const box = document.getElementById(`${site.key}-covers`);
+                withImage.slice(0, 5).forEach(i => {
+                    const img = document.createElement('img');
+                    img.src = i[site.image];
+                    img.alt = '';
+                    img.loading = 'lazy';
+                    img.onerror = () => img.remove();
+                    box.appendChild(img);
+                });
+
+                if (items[0]) {
+                    const latest = document.getElementById(`${site.key}-latest`);
+                    const label = document.createElement('span');
+                    label.textContent = site.verb;
+                    latest.append(label, items[0].title);
+                }
+            } catch (e) {
+                document.getElementById(`${site.key}-stat`).textContent = '';
+            }
+        });
+    </script>
+</body>
+</html>
