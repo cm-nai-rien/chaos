@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="en" data-site="books">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chao's Chronology</title>
+<link rel="stylesheet" href="../assets/theme.css">
+<style>
+:root{
+  --paper:#f5ead8; --paper-2:#ecdfc8; --ink:#3d2409; --ink-soft:#8a7a66; --pencil:#b3a48d;
+  --thread:#c0392b; --mine:#5c5815; --tape:rgba(196,153,63,.38);
+  --display:'Playfair Display',Georgia,serif;
+  --body:'Outfit',system-ui,sans-serif;
+}
+*{box-sizing:border-box}
+html,body{height:100%}
+body{margin:0;display:flex;flex-direction:column;background:var(--paper);color:var(--ink);font-family:var(--body);overflow:hidden;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
+.site-switch{color:var(--ink)}
+header{padding:14px 24px 14px;width:90%;max-width:1600px;margin:0 auto;padding-left:0;padding-right:0}
+.eyebrow{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft)}
+h1{font-family:var(--display);font-style:italic;font-weight:400;font-size:clamp(2.2rem,4.5vw,3.4rem);margin:2px 0 0;line-height:1}
+.sub{margin:8px 0 0;font-size:.95rem;font-weight:300;line-height:1.5;max-width:560px}
+.sub .count{color:var(--ink-soft)}
+.legend{position:absolute;display:flex;gap:36px;font-size:20px;font-weight:300;white-space:nowrap;z-index:6;cursor:auto}
+.legend label{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
+.legend input{accent-color:var(--ink);width:18px;height:18px}
+.sw{display:inline-block;width:40px;height:0;border-top:2.5px solid}
+.sw.fact{border-color:var(--thread)} .sw.mine{border-color:var(--mine);border-top-style:dashed} .sw.made{border-color:var(--pencil);border-top-width:1.5px}
+
+#viewport{position:relative;flex:1;overflow:hidden;touch-action:none;cursor:grab;border-top:1px solid rgba(61,36,9,.15)}
+#viewport.panning{cursor:grabbing}
+.stage{position:absolute;left:0;top:0;transform-origin:0 0}
+.loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-family:var(--display);font-style:italic;font-size:1.4rem;color:var(--ink-soft)}
+svg.layer{position:absolute;left:0;top:0;overflow:visible}
+svg.over{pointer-events:none}
+.ax{stroke:var(--ink);stroke-width:1.8;fill:none}
+.ax.thin{stroke:var(--ink-soft);stroke-width:1.1}
+.tick{stroke:var(--ink);stroke-width:1.2}
+.tick.thin{stroke:var(--ink-soft);stroke-width:.9}
+.yr{font-family:var(--display);font-style:italic;font-size:30px;fill:var(--ink)}
+.yr.small{font-size:15px;fill:var(--ink-soft)}
+.mo{font-family:var(--body);font-size:10px;letter-spacing:1px;fill:var(--ink-soft)}
+.band{font-family:var(--body);font-size:13px;letter-spacing:2.5px;fill:var(--ink-soft)}
+.band.main{font-size:14px;fill:var(--ink);font-weight:500}
+.leader{stroke:var(--ink-soft);stroke-width:1;fill:none}
+.leader.re{stroke-dasharray:3 4}
+.pin{fill:var(--ink)}
+.made{stroke:var(--pencil);stroke-width:.8;fill:none;opacity:.22}
+.made.on{opacity:1;stroke:var(--ink);stroke-width:1.5}
+.madepin{fill:var(--ink-soft)}
+.thread{fill:none;stroke-linecap:round}
+.thread.fact{stroke:var(--thread);stroke-width:1.6}
+.thread.mine{stroke:var(--mine);stroke-width:1.7;stroke-dasharray:6 5}
+.knot.fact{fill:var(--thread)} .knot.mine{fill:var(--mine)}
+.tlab{font-family:var(--body);font-size:12.5px;display:none}
+.tlab.fact{fill:var(--thread)} .tlab.mine{fill:var(--mine)}
+.tlab-bg{fill:var(--paper);opacity:.94;display:none}
+.focus .thread:not(.on),.focus .knot:not(.on),.focus .made:not(.on){opacity:.08}
+.thread.on{stroke-width:2.4}
+.tlab.on,.tlab-bg.on{display:inline}
+.hide-fact .fact{display:none!important} .hide-mine .mine{display:none!important} .hide-made .made,.hide-made .madepin{display:none}
+.card{position:absolute;cursor:pointer}
+.card .ph{position:absolute;inset:0;background:#fff;padding:3px;box-shadow:0 1px 3px rgba(61,36,9,.25)}
+.card img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;background:var(--paper-2)}
+.card .ph.tape::before{content:"";position:absolute;left:50%;top:-8px;width:40px;height:15px;transform:translateX(-50%) rotate(-4deg);background:var(--tape)}
+.card.film .ph.tape::before{top:auto;bottom:-8px}
+.card .idx{background:#fffdf7;background-image:repeating-linear-gradient(transparent 0 15px,rgba(92,88,21,.2) 15px 16px);border-top:3px solid rgba(192,57,43,.4);padding:6px 5px;font-family:var(--display);font-style:italic;font-size:11.5px;line-height:14px;overflow:hidden;color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center}
+.card .tip{position:absolute;left:calc(100% + 8px);top:50%;transform:translateY(-50%);width:max-content;max-width:220px;background:#fffaf0;border:1px solid var(--ink);padding:6px 9px;font-size:12px;line-height:1.3;color:var(--ink);box-shadow:4px 4px 0 rgba(61,36,9,.15);pointer-events:none;opacity:0;transition:opacity .12s;z-index:30}
+.card .tip .d{display:block;font-family:var(--display);font-style:italic;font-size:12px;color:var(--ink-soft)}
+.card:hover{z-index:25}
+.card:hover .tip{opacity:1}
+.focus .card:not(.on){opacity:.22}
+.card.on{z-index:5}
+.card.sel .ph{box-shadow:0 0 0 2px var(--ink),0 6px 16px rgba(61,36,9,.25)}
+.far .tlab,.far .tlab-bg,.far .mo{visibility:hidden}
+
+.zoombar{position:absolute;left:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));display:flex;align-items:center;background:#fffaf0;border:1px solid var(--ink);box-shadow:4px 4px 0 rgba(61,36,9,.15);z-index:10;font-family:var(--body)}
+.zoombar button{background:none;border:0;border-right:1px solid rgba(61,36,9,.2);height:34px;min-width:36px;padding:0 10px;font:inherit;font-size:15px;color:var(--ink);cursor:pointer}
+.zoombar button:last-child{border-right:0}
+.zoombar button:hover{background:var(--paper-2)}
+.zoombar .pct{min-width:62px;font-size:13px}
+.zoombar .txt{font-size:11px;letter-spacing:1.5px;text-transform:uppercase}
+.tips{position:absolute;right:16px;bottom:calc(16px + env(safe-area-inset-bottom,0px));font-size:11px;font-weight:300;color:var(--ink-soft);text-align:right;line-height:1.6;z-index:10;pointer-events:none}
+
+aside{position:fixed;right:18px;top:18px;width:340px;max-height:calc(100vh - 36px);overflow:auto;background:#fffaf0;border:1px solid var(--ink);padding:20px 20px 16px;box-shadow:10px 10px 0 rgba(61,36,9,.2);font-size:14px;font-weight:300;line-height:1.55;z-index:20;cursor:auto}
+aside .x{position:absolute;right:8px;top:4px;font-size:24px;background:none;border:0;cursor:pointer;color:var(--ink);font-family:var(--body);font-weight:200}
+aside .eyebrow{margin-bottom:4px}
+aside h2{font-family:var(--display);font-style:italic;font-weight:400;font-size:1.6rem;margin:0;line-height:1.15}
+aside .orig{font-size:12px;color:var(--ink-soft);font-style:italic}
+aside dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:14px 0 0}
+aside dt{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-soft);padding-top:2px}
+aside dd{margin:0}
+aside .note{display:block;font-size:12px;color:var(--ink-soft)}
+aside .q{margin-top:14px;padding:10px 12px;background:var(--paper);border-left:3px solid var(--ink-soft);font-family:var(--display);font-style:italic;font-size:14px;white-space:pre-line}
+aside .q .from{display:block;margin-top:6px;font-family:var(--body);font-style:normal;font-size:11px;letter-spacing:1px;text-transform:uppercase;color:var(--ink-soft)}
+aside ul{list-style:none;padding:0;margin:6px 0 0}
+aside li{margin:8px 0;padding-left:12px;border-left:2px solid}
+aside li.fact{border-color:var(--thread)} aside li.mine{border-color:var(--mine);border-left-style:dashed}
+aside li b{font-weight:500}
+@media (max-width:700px){
+  header{width:auto;padding:10px 16px}
+  aside{left:12px;right:12px;top:auto;bottom:62px;width:auto;max-height:52vh}
+  .tips{display:none}
+}
+</style>
+</head>
+<body>
+<nav class="site-switch">
+  <a class="site-switch-home" href="../">Chao's Lists</a>
+  <div class="site-switch-tabs">
+    <a href="../movies/"><span class="swatch swatch-movies"></span>Movies</a>
+    <a href="../books/"><span class="swatch swatch-books"></span>Books</a>
+    <a class="active" href="./">Chronology</a>
+  </div>
+</nav>
+<header>
+  <h1>Chao's Chronology</h1>
+  <p class="sub">Everything I've read or watched, hung on the day I met it. The thin line below shows when each work was made. <span class="count" id="count"></span></p>
+</header>
+<div id="viewport">
+  <div class="loading" id="loading">Loading…</div>
+  <div class="stage" id="stage">
+    <div class="legend" id="legend">
+      <label><input type="checkbox" id="t-fact" checked><span class="sw fact"></span>Facts between works</label>
+      <label><input type="checkbox" id="t-mine" checked><span class="sw mine"></span>Connections I wrote</label>
+      <label><input type="checkbox" id="t-made" checked><span class="sw made"></span>When it was made</label>
+    </div>
+  </div>
+  <div class="zoombar" id="zoombar">
+    <button data-z="out" aria-label="Zoom out">−</button>
+    <button class="pct" data-z="reset" title="Reset to 100%">100%</button>
+    <button data-z="in" aria-label="Zoom in">+</button>
+    <button class="txt" data-z="start" title="Jump to the beginning">Start</button>
+    <button class="txt" data-z="latest" title="Jump to the latest">Latest</button>
+  </div>
+  <div class="tips">Drag or scroll to move · ⌘/Ctrl + scroll or pinch to zoom</div>
+</div>
+<aside id="panel" hidden></aside>
+
+<script>
+// Built at load time from the same files the Movies and Books pages use,
+// so anything added there shows up here. curated.json adds essays, dates and threads.
+const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const validDate = d => d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !d.startsWith('0000');
+const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^\w　-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
+const shortTitle = t => { const s = t.split(/\s*[:：(（]/)[0].trim(); return s.length >= 2 ? s : t; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+async function load(){
+  const get = u => fetch(u, {cache:'no-cache'}).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
+  const [movies, books, cur] = await Promise.all([get('../movies/movies.json'), get('../books/books.json'), get('curated.json')]);
+  const nodes = [], seen = new Map();
+  // movies (merge repeated entries of the same title + year into re-watches)
+  movies.slice().sort((a, b) => a.date_sort.localeCompare(b.date_sort)).forEach(m => {
+    const key = 'm|' + m.title + '|' + m.year;
+    if (seen.has(key)){ seen.get(key).rereads.push({d:m.date_sort, note:'Watched again'}); return; }
+    const n = {id:'m-' + slug(m.title) + '-' + m.year, kind:'film', title:m.title, en:m.title, year:+m.year || null, met:m.date_sort,
+      img:(m.poster || '').replace('/t/p/w500/', '/t/p/w185/'), quote:(m.review || '').trim() || null,
+      rating:m.rating ? `${m.rating}/10` : null, src:m.type === 'tv' ? 'Movie log (TV)' : 'Movie log', rereads:[]};
+    seen.set(key, n); nodes.push(n);
+  });
+  books.forEach(b => {
+    nodes.push({id:'b-' + slug(b.title), kind:'book', title:b.title, en:shortTitle(b.title), by:b.author, year:parseInt(b.year_published) || null,
+      met:validDate(b.date_sort) ? b.date_sort : null, img:b.cover || null, quote:(b.review || '').trim() || null,
+      rating:+b.rating > 0 ? `${b.rating}/5` : null, src:'Book log', rereads:[]});
+  });
+  // curated layer
+  const find = spec => {
+    if (!spec.includes(':')) return nodes.find(n => n.id === spec);
+    const [k, t] = [spec.slice(0, spec.indexOf(':')), spec.slice(spec.indexOf(':') + 1).toLowerCase()];
+    const pool = nodes.filter(n => n.kind === (k === 'movie' ? 'film' : 'book'));
+    return pool.find(n => n.title.toLowerCase() === t) || pool.find(n => n.title.toLowerCase().startsWith(t));
+  };
+  (cur.overrides || []).forEach(o => {
+    const n = find(o.match); if (!n) return console.warn('No match for', o.match);
+    const {match, logNote, dropLogDate, ...f} = o;
+    if (f.met && n.met && f.met !== n.met && !dropLogDate) n.rereads.unshift({d:n.met, note:logNote || 'In my log'});
+    Object.assign(n, f);
+  });
+  (cur.extras || []).forEach(e => nodes.push({rereads:[], ...e, title:e.en, img:e.img || null}));
+  nodes.forEach(n => n.rereads.sort((a, b) => a.d.localeCompare(b.d)));
+  const threads = (cur.threads || []).map(t => ({...t, A:find(t.a), B:find(t.b)})).filter(t => t.A && t.B && t.A.met && t.B.met);
+  return {nodes, threads};
+}
+
+load().then(build).catch(err => { document.getElementById('loading').textContent = 'Could not load the lists.'; console.error(err); });
+
+function build({nodes:NODES, threads:THREADS}){
+  document.getElementById('loading').remove();
+  const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
+  const dated = NODES.filter(n => n.met), undated = NODES.filter(n => !n.met);
+  document.getElementById('count').textContent = `${NODES.filter(n => n.kind === 'film').length} films and ${NODES.filter(n => n.kind === 'book').length} books so far.`;
+
+  // ---------- layout: one group per month; cards stack against my axis, wrapping sideways after 6 ----------
+  const CW = 70, CH = 104, GAP = 5, STACK = 6, COLGAP = 18;
+  const mkey = d => d.slice(0, 7), mnum = k => +k.slice(0, 4) * 12 + +k.slice(5, 7) - 1;
+  const groups = {};
+  dated.slice().sort((a, b) => a.met.localeCompare(b.met)).forEach(n => {
+    const k = mkey(n.met); (groups[k] ||= {k, books:[], films:[]})[n.kind === 'book' ? 'books' : 'films'].push(n);
+  });
+  const keys = Object.keys(groups).sort();
+  const wide = c => Math.max(1, Math.ceil(c.books.length / STACK), Math.ceil(c.films.length / STACK)) * (CW + GAP) - GAP;
+  // the "date unknown" shelf comes first
+  const shelfCols = Math.ceil(undated.length / STACK), shelfW = shelfCols * (CW + GAP) - GAP;
+  const startX = 330;
+  let x = startX + (undated.length ? shelfW + 120 : 0), prev = null;
+  keys.forEach(k => {
+    const c = groups[k], w = wide(c);
+    if (prev){
+      const gm = mnum(k) - mnum(prev.k);
+      x += COLGAP + Math.min(gm - 1, 6) * 10 + (k.slice(0, 4) !== prev.k.slice(0, 4) ? 30 : 0) + (gm > 12 ? 30 : 0);
+    }
+    Object.assign(c, {left:x, w, x:x + w / 2}); x += w; prev = c;
+  });
+  const lastX = x;
+  const maxB = Math.max(STACK, 1), maxF = STACK;
+  const mainAx = 70 + maxB * (CH + GAP) + 46;
+  const place = (n, left, i, book) => {
+    const sub = Math.floor(i / STACK), lvl = i % STACK;
+    Object.assign(n, {cx:left + sub * (CW + GAP) + CW / 2, w:CW, h:CH, lvl, top:book ? mainAx - 44 - (lvl + 1) * (CH + GAP) + GAP : mainAx + 38 + lvl * (CH + GAP)});
+    n.bottom = n.top + n.h;
+  };
+  keys.forEach(k => { const c = groups[k]; c.books.forEach((n, i) => place(n, c.left, i, true)); c.films.forEach((n, i) => place(n, c.left, i, false)); });
+  undated.forEach((n, i) => place(n, startX, i, true));
+  const filmFoot = mainAx + 38 + maxF * (CH + GAP);
+  const madeAx = filmFoot + 110;
+  const W = lastX + 220, H = madeAx + 70;
+  const colList = keys.map(k => groups[k]);
+  const xOfDate = d => {
+    const k = mkey(d); if (groups[k]) return groups[k].x;
+    const m = mnum(k), i = colList.findIndex(c => mnum(c.k) > m);
+    if (i <= 0) return i === 0 ? colList[0].left - 30 : lastX + 30;
+    const A = colList[i - 1], B = colList[i];
+    return A.x + (B.x - A.x) * (m - mnum(A.k)) / (mnum(B.k) - mnum(A.k));
+  };
+  // secondary axis (when made): long ago is squeezed, the 20th century gets the room
+  const MX0 = startX, MX1 = lastX;
+  const MSEG = [[-500, MX0], [1800, MX0 + 220], [1900, MX0 + 520], [2030, MX1]];
+  const yx = y => { y = Math.max(-500, Math.min(2030, y)); for (let i = 1; i < MSEG.length; i++){ const [a, xa] = MSEG[i - 1], [b, xb] = MSEG[i]; if (y <= b) return xa + (y - a) / (b - a) * (xb - xa); } return MX1; };
+
+  // ---------- drawing helpers ----------
+  const ns = 'http://www.w3.org/2000/svg';
+  const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
+  let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  const hash = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
+  function wobble(x1, y1, x2, y2, amp = 1.2, step = 40){
+    const len = Math.hypot(x2 - x1, y2 - y1) || 1, n = Math.max(2, Math.round(len / step));
+    const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
+    let d = `M${x1} ${y1}`;
+    for (let i = 1; i <= n; i++){ const t = i / n, o = i === n ? 0 : (rnd() - .5) * 2 * amp; d += ` L${(x1 + (x2 - x1) * t + nx * o).toFixed(1)} ${(y1 + (y2 - y1) * t + ny * o).toFixed(1)}`; }
+    return d;
+  }
+  const fmt = d => { const [y, m, dd] = d.split('-'); return `${MONTHS[+m - 1]} ${+dd}, ${y}`; };
+  const cardDate = n => !n.met ? 'Date unknown' : n.approx ? `~ ${MONTHS[+n.met.slice(5, 7) - 1]} ${n.met.slice(0, 4)}` : fmt(n.met);
+  const yearText = n => n.yearLabel || n.year || '';
+
+  const stage = document.getElementById('stage');
+  stage.style.width = W + 'px'; stage.style.height = H + 'px';
+  const under = el('svg', {class:'layer', width:W, height:H, viewBox:`0 0 ${W} ${H}`}); stage.prepend(under);
+  const gMade = el('g', {}, under), gAx = el('g', {}, under), gLead = el('g', {}, under);
+
+  // main axis
+  el('path', {class:'ax', d:wobble(startX - 60, mainAx, lastX + 90, mainAx)}, gAx);
+  el('path', {class:'ax', d:`M${lastX + 82} ${mainAx - 7} L${lastX + 94} ${mainAx} L${lastX + 82} ${mainAx + 7}`}, gAx);
+  el('text', {class:'band main', x:24, y:mainAx + 5}, gAx).textContent = 'WHEN I READ / WATCHED IT';
+  el('text', {class:'band', x:24, y:mainAx - 30}, gAx).textContent = 'BOOKS ↑';
+  el('text', {class:'band', x:24, y:mainAx + 40}, gAx).textContent = 'FILMS & TV ↓';
+  if (undated.length){
+    el('text', {class:'yr', x:startX, y:mainAx - 14}, gAx).textContent = 'Date unknown';
+    const bx = startX + shelfW + 60;
+    el('path', {class:'ax', d:`M${bx - 8} ${mainAx + 9} l8 -18 M${bx + 2} ${mainAx + 9} l8 -18`, stroke:'var(--paper)', 'stroke-width':6}, gAx);
+    el('path', {class:'ax', d:`M${bx - 8} ${mainAx + 9} l8 -18 M${bx + 2} ${mainAx + 9} l8 -18`}, gAx);
+  }
+  let lastYear = null;
+  colList.forEach((c, i) => {
+    const count = c.books.length + c.films.length;
+    el('circle', {class:'pin', cx:c.x, cy:mainAx, r:Math.min(14, 2.6 + Math.sqrt(count) * 2)}, gAx);
+    el('text', {class:'mo', x:c.x, y:mainAx + 28, 'text-anchor':'middle'}, gAx).textContent = MONTHS[+c.k.slice(5) - 1].toUpperCase();
+    const y = c.k.slice(0, 4);
+    if (y !== lastYear){
+      el('text', {class:'yr', x:c.left, y:mainAx - 16}, gAx).textContent = y;
+      if (lastYear && +y - +lastYear > 1){
+        const bx = (colList[i - 1].left + colList[i - 1].w + c.left) / 2;
+        el('path', {class:'ax', d:`M${bx - 8} ${mainAx + 9} l8 -18 M${bx + 2} ${mainAx + 9} l8 -18`, stroke:'var(--paper)', 'stroke-width':6}, gAx);
+        el('path', {class:'ax', d:`M${bx - 8} ${mainAx + 9} l8 -18 M${bx + 2} ${mainAx + 9} l8 -18`}, gAx);
+      }
+      lastYear = y;
+    }
+  });
+
+  // secondary axis
+  el('path', {class:'ax thin', d:wobble(MX0 - 30, madeAx, MX1 + 30, madeAx, .8)}, gAx);
+  [[-400, '400 BC'], [0, 'AD 1'], [1600, '1600'], [1800, '1800'], [1850, '1850']].forEach(([y, t]) => {
+    el('path', {class:'tick thin', d:`M${yx(y)} ${madeAx - 5} L${yx(y)} ${madeAx + 5}`}, gAx);
+    el('text', {class:'yr small', x:yx(y), y:madeAx + 24, 'text-anchor':'middle'}, gAx).textContent = t;
+  });
+  for (let y = 1900; y <= 2020; y += 10){
+    el('path', {class:'tick thin', d:`M${yx(y)} ${madeAx - 5} L${yx(y)} ${madeAx + 5}`}, gAx);
+    el('text', {class:'yr small', x:yx(y), y:madeAx + 24, 'text-anchor':'middle'}, gAx).textContent = y;
+  }
+  el('text', {class:'band', x:24, y:madeAx + 5}, gAx).textContent = 'WHEN IT WAS MADE';
+
+  // re-reads and made-lines
+  NODES.forEach(n => {
+    const book = n.kind === 'book';
+    n.rereads.forEach(r => {
+      if (!n.met) return;
+      const rx = xOfDate(r.d);
+      el('path', {class:'leader re', d:`M${n.cx} ${n.top + n.h / 2} Q${(n.cx + rx) / 2} ${book ? mainAx - 24 : mainAx + 24} ${rx} ${mainAx}`}, gLead);
+      el('circle', {cx:rx, cy:mainAx, r:3, fill:'var(--paper)', stroke:'var(--ink)', 'stroke-width':1.1}, gLead);
+    });
+    if (n.year == null) return;
+    const sx = n.cx + (rnd() - .5) * 10, sy = book ? mainAx : filmFoot - 20, ex = yx(n.year), mid = (sy + madeAx) / 2;
+    n.madePath = el('path', {class:'made', d:`M${sx} ${sy} C${sx} ${mid + 30}, ${ex} ${mid - 30}, ${ex} ${madeAx}`}, gMade);
+  });
+
+  // cards
+  let dragged = false;
+  const outerLvl = (n, list) => n.lvl === STACK - 1 || n === list.at(-1);
+  NODES.forEach(n => {
+    const c = document.createElement('div');
+    c.className = 'card ' + n.kind; c.dataset.id = n.id;
+    Object.assign(c.style, {left:(n.cx - CW / 2) + 'px', top:n.top + 'px', width:CW + 'px', height:CH + 'px'});
+    const r = ((hash(n.id) % 40) / 10 - 2).toFixed(1);
+    const g = n.met ? groups[mkey(n.met)] : null, list = g ? (n.kind === 'book' ? g.books : g.films) : undated;
+    const tape = outerLvl(n, list) ? ' tape' : '';
+    c.innerHTML = (n.img
+      ? `<div class="ph${tape}" style="transform:rotate(${r}deg)"><img alt="" decoding="async" draggable="false"></div>`
+      : `<div class="ph idx${tape}" style="transform:rotate(${r}deg)">${esc(n.en)}</div>`)
+      + `<div class="tip">${esc(n.en)}<span class="d">${cardDate(n)}${yearText(n) ? ' · ' + yearText(n) : ''}</span></div>`;
+    c.addEventListener('click', e => { e.stopPropagation(); if (!dragged) select(n.id); });
+    stage.appendChild(c); n.card = c; n.imgEl = c.querySelector('img');
+  });
+  // load posters only when their card comes into view (the browser's own lazy loading
+  // can't see through the zoom transform)
+  const pending = NODES.filter(n => n.imgEl && n.img);
+  function loadVisible(){
+    const vw = vp.clientWidth, vh = vp.clientHeight, pad = 400;
+    for (let i = pending.length - 1; i >= 0; i--){
+      const n = pending[i], sx = n.cx * view.s + view.x, sy = n.top * view.s + view.y;
+      if (sx > -pad && sx < vw + pad && sy > -pad && sy < vh + pad){ n.imgEl.src = n.img; pending.splice(i, 1); }
+    }
+  }
+  const legend = document.getElementById('legend');
+  legend.style.left = (startX - 60) + 'px'; legend.style.top = (filmFoot + 34) + 'px';
+
+  // threads
+  const over = el('svg', {class:'layer over', width:W, height:H, viewBox:`0 0 ${W} ${H}`}); stage.appendChild(over);
+  const gTh = el('g', {}, over), gLab = el('g', {}, over);
+  const center = n => ({x:n.cx, y:n.top + n.h / 2});
+  THREADS.forEach(th => {
+    const A = center(th.A), B = center(th.B);
+    const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
+    const bow = (th.t === 'mine' ? -1 : 1) * Math.min(90, 18 + len * .1);
+    const qx = (A.x + B.x) / 2 - dy / len * bow, qy = (A.y + B.y) / 2 + dx / len * bow;
+    th.path = el('path', {class:`thread ${th.t}`, d:`M${A.x} ${A.y} Q${qx} ${qy} ${B.x} ${B.y}`}, gTh);
+    th.knots = [A, B].map(P => el('circle', {class:`knot ${th.t}`, cx:P.x, cy:P.y, r:3.2}, gTh));
+    const lx = (A.x + B.x) / 4 + qx / 2, ly = (A.y + B.y) / 4 + qy / 2;
+    th.bg = el('rect', {class:`tlab-bg ${th.t}`, x:lx, y:ly - 14, width:10, height:22, rx:3}, gLab);
+    th.lab = el('text', {class:`tlab ${th.t}`, x:lx, y:ly + 2, 'text-anchor':'middle'}, gLab);
+    th.lab.textContent = th.en;
+  });
+
+  // ---------- selection ----------
+  const panel = document.getElementById('panel');
+  function select(id){
+    const n = byId[id];
+    stage.classList.add('focus');
+    NODES.forEach(m => { m.card.classList.toggle('on', m === n); m.card.classList.toggle('sel', m === n); m.madePath?.classList.toggle('on', m === n); });
+    const rel = THREADS.filter(t => t.A === n || t.B === n);
+    THREADS.forEach(t => { const on = rel.includes(t); [t.path, t.lab, t.bg, ...t.knots].forEach(e => e.classList.toggle('on', on)); });
+    rel.forEach(t => {
+      (t.A === n ? t.B : t.A).card.classList.add('on');
+      const b = t.lab.getBBox(); t.bg.setAttribute('x', b.x - 6); t.bg.setAttribute('width', b.width + 12);
+    });
+    const met = n.met
+      ? `${n.approx ? '~ ' : ''}${fmt(n.met)}${n.metNote ? `<span class="note">${esc(n.metNote)}</span>` : ''}`
+      : '<span class="note">Date unknown</span>';
+    const again = n.rereads.map(r => `<span class="note">Again: ${r.approx ? '~ ' : ''}${fmt(r.d)}${r.note ? ` (${esc(r.note)})` : ''}</span>`).join('');
+    panel.innerHTML = `<button class="x" aria-label="Close">×</button>
+      <div class="eyebrow">${n.kind === 'film' ? (n.src.includes('TV') ? 'TV' : 'Film') : 'Book'}</div>
+      <h2>${esc(n.en)}</h2>${n.enNote ? `<div class="orig">${esc(n.enNote)}</div>` : ''}${n.title && n.title !== n.en ? `<div class="orig">${esc(n.title)}</div>` : ''}
+      <dl>
+        <dt>${n.kind === 'film' ? 'Watched' : 'Read'}</dt><dd>${met}${again}</dd>
+        ${n.by ? `<dt>${n.kind === 'film' ? 'Director' : 'Author'}</dt><dd>${esc(n.by)}</dd>` : ''}
+        ${yearText(n) ? `<dt>Made</dt><dd>${yearText(n)}</dd>` : ''}
+        ${n.rating ? `<dt>My rating</dt><dd>${n.rating}</dd>` : ''}
+        <dt>Logged in</dt><dd>${esc(n.src)}</dd>
+      </dl>
+      ${n.quote ? `<div class="q">${esc(n.quote)}<span class="from">What I wrote</span></div>` : ''}
+      ${rel.length ? `<dl><dt>Threads</dt><dd><ul>${rel.map(t => `<li class="${t.t}"><b>${esc((t.A === n ? t.B : t.A).en)}</b>: ${esc(t.en)}</li>`).join('')}</ul></dd></dl>` : ''}`;
+    panel.hidden = false;
+    panel.querySelector('.x').onclick = clear;
+  }
+  function clear(){
+    stage.classList.remove('focus');
+    NODES.forEach(m => { m.card.classList.remove('on', 'sel'); m.madePath?.classList.remove('on'); });
+    THREADS.forEach(t => [t.path, t.lab, t.bg, ...t.knots].forEach(e => e.classList.remove('on')));
+    panel.hidden = true;
+  }
+  [['t-fact', 'hide-fact'], ['t-mine', 'hide-mine'], ['t-made', 'hide-made']].forEach(([id, cls]) =>
+    document.getElementById(id).addEventListener('change', e => stage.classList.toggle(cls, !e.target.checked)));
+
+  // ---------- zoom & pan (Figma-style), one update per frame ----------
+  const vp = document.getElementById('viewport'), pct = document.querySelector('.zoombar .pct');
+  const view = {s:1, x:0, y:0}, MIN = .35, MAX = 4;
+  let raf = 0, wasFar = null, settle = 0;
+  function apply(){
+    if (raf) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      stage.style.transform = `translate3d(${view.x}px,${view.y}px,0) scale(${view.s})`;
+      pct.textContent = Math.round(view.s * 100) + '%';
+      const far = view.s < .5;
+      if (far !== wasFar){ stage.classList.toggle('far', far); wasFar = far; }
+      stage.style.willChange = 'transform';
+      clearTimeout(settle); settle = setTimeout(() => { stage.style.willChange = 'auto'; loadVisible(); }, 120);
+    });
+  }
+  function zoomAt(cx, cy, s){
+    s = Math.min(MAX, Math.max(MIN, s));
+    view.x = cx - (cx - view.x) * s / view.s; view.y = cy - (cy - view.y) * s / view.s; view.s = s; apply();
+  }
+  const vpCenter = () => [vp.clientWidth / 2, vp.clientHeight / 2];
+  const fitScale = () => Math.max(MIN, Math.min(1, vp.clientHeight / H * .97));
+  function goStart(){ view.s = fitScale(); view.x = 0; view.y = Math.max(0, (vp.clientHeight - H * view.s) / 2); apply(); }
+  function goLatest(){ view.s = fitScale(); view.x = vp.clientWidth - (W - 40) * view.s; view.y = Math.max(0, (vp.clientHeight - H * view.s) / 2); apply(); }
+  function focusCard(n){ view.s = 1; view.x = vp.clientWidth / 2 - n.cx; view.y = vp.clientHeight / 2 - (n.top + n.h / 2); apply(); }
+  vp.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = vp.getBoundingClientRect();
+    if (e.ctrlKey || e.metaKey) zoomAt(e.clientX - r.left, e.clientY - r.top, view.s * Math.exp(-e.deltaY * .01));
+    else { view.x -= e.deltaX; view.y -= e.deltaY; apply(); }
+  }, {passive:false});
+  const pts = new Map(); let last = null, pinch = null;
+  vp.addEventListener('pointerdown', e => {
+    if (e.target.closest('.zoombar,.legend')) return;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    dragged = false; last = {x:e.clientX, y:e.clientY, sx:e.clientX, sy:e.clientY};
+    if (pts.size === 2){ const [a, b] = [...pts.values()]; pinch = {d:Math.hypot(a.x - b.x, a.y - b.y), s:view.s}; }
+  });
+  window.addEventListener('pointermove', e => {
+    if (!pts.has(e.pointerId)) return;
+    pts.set(e.pointerId, {x:e.clientX, y:e.clientY});
+    if (pts.size === 2 && pinch){
+      const [a, b] = [...pts.values()], r = vp.getBoundingClientRect();
+      zoomAt((a.x + b.x) / 2 - r.left, (a.y + b.y) / 2 - r.top, pinch.s * Math.hypot(a.x - b.x, a.y - b.y) / pinch.d);
+      dragged = true; return;
+    }
+    if (Math.hypot(e.clientX - last.sx, e.clientY - last.sy) > 5){ dragged = true; vp.classList.add('panning'); }
+    view.x += e.clientX - last.x; view.y += e.clientY - last.y; last.x = e.clientX; last.y = e.clientY; apply();
+  });
+  const up = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch = null; if (!pts.size) vp.classList.remove('panning'); };
+  window.addEventListener('pointerup', up); window.addEventListener('pointercancel', up);
+  vp.addEventListener('click', e => { if (!dragged && !e.target.closest('.card,.zoombar,.legend')) clear(); });
+  document.getElementById('zoombar').addEventListener('click', e => {
+    const z = e.target.dataset.z; if (!z) return;
+    const [cx, cy] = vpCenter();
+    if (z === 'in') zoomAt(cx, cy, view.s * 1.25);
+    if (z === 'out') zoomAt(cx, cy, view.s / 1.25);
+    if (z === 'reset') zoomAt(cx, cy, 1);
+    if (z === 'start') goStart();
+    if (z === 'latest') goLatest();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') return clear();
+    const [cx, cy] = vpCenter();
+    if (e.key === '=' || e.key === '+') zoomAt(cx, cy, view.s * 1.25);
+    else if (e.key === '-' || e.key === '_') zoomAt(cx, cy, view.s / 1.25);
+    else if (e.key === '0' && !e.shiftKey) zoomAt(cx, cy, 1);
+  });
+  window.addEventListener('resize', apply);
+
+  const initial = byId[decodeURIComponent(location.hash.slice(1))];
+  if (initial){ focusCard(initial); select(initial.id); } else goLatest();
+}
+</script>
+</body>
+</html>
