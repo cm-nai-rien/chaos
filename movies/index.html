@@ -15,15 +15,15 @@
         </script>
     <title>Chaos Movie List</title>
     
-    <link rel="stylesheet" href="/assets/theme.css">
-    <link rel="stylesheet" href="/assets/list.css">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <link rel="stylesheet" href="../assets/list.css">
 </head>
 <body>
 
 
     <nav class="site-switch" aria-label="Switch site">
-        <a href="/" class="site-switch-home">Chao's Lists</a>
-        <div class="site-switch-tabs"><a href="/movies/" class="active" aria-current="page"><span class="swatch swatch-movies"></span>Movies</a><a href="/books/"><span class="swatch swatch-books"></span>Books</a></div>
+        <a href="../" class="site-switch-home">Chao's Lists</a>
+        <div class="site-switch-tabs"><a href="../movies/" class="active" aria-current="page"><span class="swatch swatch-movies"></span>Movies</a><a href="../books/"><span class="swatch swatch-books"></span>Books</a></div>
     </nav>
     <header>
         <div class="header-row">
@@ -182,7 +182,7 @@
 
     <div class="footer">
         <div>© 2026 Chao Wu</div>
-        <div class="footer-links"><a href="/">Home</a><a href="admin.html">Admin Portal</a></div>
+        <div class="footer-links"><a href="../">Home</a><a href="admin.html">Admin Portal</a></div>
     </div>
 
     <script>
@@ -436,7 +436,7 @@
         }
 
         // --- MODAL ---
-        const GITHUB_REPO = 'cm-nai-rien/cm-nai-rien.github.io';
+        const GITHUB_REPO = 'cm-nai-rien/chaos';
         const MOVIES_FILE = 'movies/movies.json'; // path inside the GitHub repo
         const adminToken = sessionStorage.getItem('adminToken');
         let currentModalMovie = null;

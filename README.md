@@ -1,6 +1,6 @@
 # Chao's Lists
 
-Personal movie and book logs, served at https://cm-nai-rien.github.io
+Personal movie and book logs, served at https://cm-nai-rien.github.io/chaos/
 
 ```
 index.html            Home page linking both lists
@@ -29,7 +29,7 @@ shared between both admin pages for the browser tab.
 python3 -m http.server 8080
 ```
 
-Then open http://localhost:8080. Pages use root paths like `/assets/theme.css`, so serve
-from the repo root.
+Then open http://localhost:8080. Links are relative, so the site works at any path
+(it is served under `/chaos/` on GitHub Pages).
 
 History from the old `MovieSite` and `BookSite` repos is kept in this repo's git log.

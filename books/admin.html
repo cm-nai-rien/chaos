@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Book Admin</title>
-    <link rel="stylesheet" href="/assets/theme.css">
-    <link rel="stylesheet" href="/assets/admin.css">
+    <link rel="stylesheet" href="../assets/theme.css">
+    <link rel="stylesheet" href="../assets/admin.css">
 </head>
 <body>
 <div class="admin-shell">
     <nav class="site-switch" aria-label="Switch site">
-        <a href="/" class="site-switch-home">Chao's Lists</a>
-        <div class="site-switch-tabs"><a href="/movies/admin.html"><span class="swatch swatch-movies"></span>Movies</a><a href="/books/admin.html" class="active" aria-current="page"><span class="swatch swatch-books"></span>Books</a></div>
+        <a href="../" class="site-switch-home">Chao's Lists</a>
+        <div class="site-switch-tabs"><a href="../movies/admin.html"><span class="swatch swatch-movies"></span>Movies</a><a href="../books/admin.html" class="active" aria-current="page"><span class="swatch swatch-books"></span>Books</a></div>
     </nav>
 
     <!-- 1. LOGIN -->
@@ -20,7 +20,7 @@
         <div class="access-btn-group">
             <input type="password" id="password-input" placeholder="Secret Key">
             <input type="password" id="token-input" placeholder="GitHub Token">
-            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the cm-nai-rien.github.io repo. Works for both admin pages.</p>
+            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the chaos repo. Works for both admin pages.</p>
             <input type="password" id="gkey-input" placeholder="Google Books API Key (optional)">
             <p class="hint">Free key from console.cloud.google.com (Books API). Without it, Google search can hit a shared daily limit. Remembered in this browser.</p>
             <button onclick="checkAccess()" style="width: 200px; margin-top: 12px;">Enter</button>
@@ -115,7 +115,7 @@
 
     <script>
         const SECRET_KEY  = 'chaos';
-        const GITHUB_REPO = 'cm-nai-rien/cm-nai-rien.github.io';
+        const GITHUB_REPO = 'cm-nai-rien/chaos';
         const BOOKS_FILE  = 'books.json';        // read by the page (same folder)
         const BOOKS_PATH  = 'books/books.json';  // path inside the GitHub repo
 
