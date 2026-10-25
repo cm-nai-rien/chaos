@@ -8,21 +8,25 @@
     <style>
         * { box-sizing: border-box; }
 
+        html, body { height: 100%; overflow: hidden; }
+        html { scrollbar-gutter: auto; }   /* nothing scrolls here, so no reserved scrollbar strip */
+
         body {
             position: relative;
             margin: 0;
-            min-height: 100vh;
             background: #0b0b0b;
             font-family: var(--font-body);
             display: flex;
             flex-direction: column;
         }
 
+        /* One screen, no scrolling: Movies | Books on top (60%), Chronology below (40%) */
         .split {
-            flex: 1;
+            height: 100vh;
+            height: 100dvh;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            min-height: 100vh;
+            grid-template-rows: 60fr 40fr;
         }
 
         .half {
@@ -30,8 +34,9 @@
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 28px;
-            padding: 72px 8%;
+            gap: clamp(8px, 2.2vh, 28px);
+            padding: 6vh 8% 3vh;
+            min-height: 0;
             background: var(--bg-page);
             color: var(--text-primary);
             text-decoration: none;
@@ -60,7 +65,7 @@
             font-style: italic;
             font-weight: 300;
             letter-spacing: -2px;
-            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-size: clamp(2.4rem, min(7vw, 9vh), 5.5rem);
             line-height: 1;
             margin: 0;
         }
@@ -73,14 +78,14 @@
 
         .covers {
             display: flex;
-            height: 190px;
+            height: clamp(70px, 17vh, 190px);
             align-items: flex-end;
         }
         .covers img {
-            width: 112px;
+            height: 92%;
             aspect-ratio: 2 / 3;
             object-fit: cover;
-            margin-right: -36px;
+            margin-right: -3.2vh;
             box-shadow: var(--shadow-retro);
             background: var(--color-gray-light);
             transition: transform 0.3s;
@@ -118,6 +123,98 @@
             padding-bottom: 2px;
         }
 
+        .chrono {
+            grid-column: 1 / -1;
+            position: relative;
+            display: grid;
+            grid-template-columns: minmax(220px, 26%) 1fr;
+            align-items: center;
+            gap: 4%;
+            padding: 3.5vh 4% 5vh;
+            min-height: 0;
+            overflow: hidden;
+            text-decoration: none;
+            --paper: #f5ead8; --ink: #3d2409;
+            background: var(--paper);
+            color: var(--ink);
+        }
+        .chrono::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: rgba(61, 36, 9, 0.08);
+            opacity: 0;
+            transition: opacity 0.3s;
+            pointer-events: none;
+        }
+        .chrono:hover::after { opacity: 1; }
+        .chrono-text { display: flex; flex-direction: column; gap: clamp(6px, 1.6vh, 18px); }
+        .chrono h2 {
+            font-family: var(--font-display);
+            font-style: italic;
+            font-weight: 300;
+            letter-spacing: -2px;
+            font-size: clamp(2rem, min(5.4vw, 7vh), 4.2rem);
+            line-height: 1;
+            margin: 0;
+        }
+
+        /* mini timeline: latest works, books above the line, films below */
+        .strip {
+            position: relative;
+            height: 100%;
+            display: flex;
+            gap: 1vh;
+            justify-content: flex-end;
+        }
+        .strip::before {
+            content: "";
+            position: absolute;
+            left: 0; right: 0; top: 50%;
+            border-top: 1.5px solid var(--ink);
+        }
+        .slot {
+            position: relative;
+            flex: 0 0 auto;
+            width: var(--slot-w);
+            display: grid;
+            grid-template-rows: 1fr 1fr;
+        }
+        .slot img {
+            width: 100%;
+            height: calc(100% - 1.4vh);
+            object-fit: cover;
+            background: #fff;
+            padding: 2px;
+            box-shadow: 0 1px 3px rgba(61, 36, 9, 0.3);
+            transition: transform 0.3s;
+        }
+        .slot .up img   { align-self: start; }
+        .slot .up       { display: flex; align-items: flex-end; padding-bottom: 1.4vh; }
+        .slot .down     { display: flex; align-items: flex-start; padding-top: 1.4vh; }
+        .slot:nth-child(odd) img  { transform: rotate(-1.5deg); }
+        .slot:nth-child(even) img { transform: rotate(1.2deg); }
+        .chrono:hover .slot img { transform: none; }
+        .slot .yr {
+            position: absolute;
+            left: 0; top: 50%;
+            transform: translate(-30%, -50%);
+            background: var(--paper);
+            padding: 0 4px;
+            font-family: var(--font-display);
+            font-style: italic;
+            font-size: clamp(0.8rem, 1.8vh, 1rem);
+            z-index: 1;
+        }
+        .slot .dot {
+            position: absolute;
+            left: 50%; top: 50%;
+            width: 6px; height: 6px;
+            margin: -3px 0 0 -3px;
+            border-radius: 50%;
+            background: var(--ink);
+        }
+
         .masthead {
             position: absolute;
             top: 24px;
@@ -146,10 +243,12 @@
         }
 
         @media (max-width: 760px) {
-            .split { grid-template-columns: 1fr; }
-            .half { min-height: 70vh; padding: 64px 24px 48px; }
-            .covers { height: 150px; }
-            .covers img { width: 88px; margin-right: -28px; }
+            .split { grid-template-columns: 1fr; grid-template-rows: 30fr 30fr 40fr; }
+            .half { padding: 5vh 24px 2vh; gap: 1.2vh; }
+            .half .latest, .half .covers { display: none; }
+            .chrono { grid-template-columns: 1fr; grid-template-rows: auto 1fr; gap: 2vh; padding: 3vh 24px 4vh; }
+            .chrono-text { padding-left: 0; }
+            .strip { justify-content: flex-start; }
         }
     </style>
 </head>
@@ -174,6 +273,16 @@
             <div class="latest" id="books-latest"></div>
             <div class="cta">Open the book list →</div>
         </a>
+
+        <a class="chrono" href="chronology/">
+            <div class="chrono-text">
+                <div class="eyebrow">Read &amp; watched, in order</div>
+                <h2>Chronology</h2>
+                <div class="stat" id="chrono-stat">&nbsp;</div>
+                <div class="cta">Open the chronology →</div>
+            </div>
+            <div class="strip" id="chrono-strip" aria-hidden="true"></div>
+        </a>
     </main>
 
     <div class="footer-note">© 2026 Chao Wu</div>
@@ -184,7 +293,7 @@
             { key: 'books',  file: 'books/books.json',   image: 'cover',  noun: ['book', 'books'], verb: 'Last read' },
         ];
 
-        SITES.forEach(async site => {
+        const loaded = SITES.map(async site => {
             try {
                 const items = await (await fetch(site.file, { cache: 'no-store' })).json();
                 items.sort((a, b) => String(b.date_sort).localeCompare(String(a.date_sort)));
@@ -212,10 +321,50 @@
                     label.textContent = site.verb;
                     latest.append(label, items[0].title);
                 }
+                return items.map(i => ({ kind: site.key, date: String(i.date_sort), img: i[site.image] }));
             } catch (e) {
                 document.getElementById(`${site.key}-stat`).textContent = '';
+                return [];
             }
         });
+
+        // Chronology preview: the most recent works that fit, oldest on the left
+        let works = [];
+        function drawStrip() {
+            const strip = document.getElementById('chrono-strip');
+            strip.replaceChildren();
+            const h = strip.clientHeight, gap = window.innerHeight * 0.01;
+            const slotW = Math.max(18, (h / 2 - window.innerHeight * 0.014) * 2 / 3);
+            strip.style.setProperty('--slot-w', slotW + 'px');
+            const fit = Math.max(0, Math.floor((strip.clientWidth + gap) / (slotW + gap)));
+            const recent = works.slice(0, fit).reverse();
+            recent.forEach((w, i) => {
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                const up = document.createElement('div'), down = document.createElement('div');
+                up.className = 'up'; down.className = 'down';
+                const img = document.createElement('img');
+                img.src = w.img; img.alt = ''; img.onerror = () => img.remove();
+                (w.kind === 'books' ? up : down).appendChild(img);
+                const dot = document.createElement('span'); dot.className = 'dot';
+                slot.append(up, down, dot);
+                const y = w.date.slice(0, 4);
+                if (i === 0 || recent[i - 1].date.slice(0, 4) !== y) {
+                    const yr = document.createElement('span'); yr.className = 'yr'; yr.textContent = y; slot.appendChild(yr);
+                }
+                strip.appendChild(slot);
+            });
+        }
+        Promise.all(loaded).then(lists => {
+            const all = lists.flat();
+            works = all.filter(w => /^\d{4}-\d{2}-\d{2}$/.test(w.date) && !w.date.startsWith('0000') && w.img && !String(w.img).endsWith('null'))
+                       .sort((a, b) => b.date.localeCompare(a.date));
+            const first = works.length ? works[works.length - 1].date.slice(0, 4) : '';
+            document.getElementById('chrono-stat').innerHTML = `<strong>${all.length}</strong> works on one timeline${first ? ` · since ${first}` : ''}`;
+            drawStrip();
+        });
+        let resizeT;
+        window.addEventListener('resize', () => { clearTimeout(resizeT); resizeT = setTimeout(drawStrip, 150); });
     </script>
 </body>
 </html>
