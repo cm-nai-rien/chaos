@@ -1,5 +1,16 @@
 [
     {
+        "title": "The Devil Wears Prada 2",
+        "date_display": "October 25, 2026",
+        "date_sort": "2026-10-25",
+        "review": "Entertaining sequel, essentially a remake with contemporary twist. Dont expect anything drastically different. Do expect to miss the old times.",
+        "rating": "6",
+        "poster": "https://image.tmdb.org/t/p/w500/xTI42pmsP5EDnvsNJPEDubwWBQO.jpg",
+        "type": "movie",
+        "year": "2026",
+        "country": "US"
+    },
+    {
         "title": "One Hundred Years of Solitude",
         "date_display": "October 19, 2026",
         "date_sort": "2026-10-19",
