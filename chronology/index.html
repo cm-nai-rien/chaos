@@ -10,7 +10,7 @@
   --paper:#f5ead8; --paper-2:#ecdfc8; --ink:#3d2409; --ink-soft:#8a7a66; --pencil:#b3a48d;
   --thread:#c0392b; --mine:#5c5815; --tape:rgba(196,153,63,.38);
   --display:'Playfair Display',Georgia,serif;
-  --body:'Outfit',system-ui,sans-serif;
+  --body:'Karla',system-ui,sans-serif;
   --move:1s cubic-bezier(.65,.05,.36,1);
 }
 *{box-sizing:border-box}
@@ -63,8 +63,9 @@ svg.over{pointer-events:none}
 .card.anim{transition:transform var(--move);will-change:transform}
 .moving .card .ph{box-shadow:none}
 .moving .card .tip{display:none}
-.card .ph{position:absolute;inset:0;background:#fff;padding:3px;box-shadow:0 1px 3px rgba(61,36,9,.25)}
-.card img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;background:var(--paper-2)}
+.card .ph{position:absolute;inset:0;box-shadow:0 1px 3px rgba(61,36,9,.25)}
+.card img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;background:var(--paper-2);transition:opacity .45s ease}
+.card:hover img{opacity:.6}
 .card .ph.tape::before{content:"";position:absolute;left:50%;top:-8px;width:40px;height:15px;transform:translateX(-50%) rotate(-4deg);background:var(--tape)}
 .card.film .ph.tape::before{top:auto;bottom:-8px}
 .card .idx{background:#fffdf7;background-image:repeating-linear-gradient(transparent 0 15px,rgba(92,88,21,.2) 15px 16px);border-top:3px solid rgba(192,57,43,.4);padding:6px 5px;font-family:var(--display);font-style:italic;font-size:11.5px;line-height:14px;overflow:hidden;color:var(--ink);display:flex;align-items:center;justify-content:center;text-align:center}
