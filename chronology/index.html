@@ -190,8 +190,21 @@ function build({nodes:NODES, threads:THREADS}){
   document.getElementById('loading').remove();
   const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
 
+  const hash = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
   const CW = 70, CH = 104, GAP = 5, STACK = 6, COLGAP = 18, START = 330;
+  const COLH = STACK * (CH + GAP) - GAP;   // tallest a stack can get
   const mainAx = 70 + STACK * (CH + GAP) + 46;
+
+  // Card size follows how much I wrote (CJK characters + Latin words).
+  // The longest 10% of reviews all get the biggest size; no review = smallest.
+  const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/g;
+  const words = t => { t = String(t || ''); return (t.match(CJK) || []).length + (t.replace(CJK, ' ').match(/[A-Za-z0-9'’]+/g) || []).length; };
+  const lens = NODES.map(n => words(n.quote)).sort((a, b) => a - b);
+  const cap = Math.max(1, lens[Math.floor(lens.length * .9)] || 1);
+  NODES.forEach(n => {
+    const k = .6 + .9 * Math.sqrt(Math.min(words(n.quote), cap) / cap);
+    n.w = Math.round(CW * k); n.h = Math.round(CH * k);
+  });
   const filmFoot = mainAx + 38 + STACK * (CH + GAP);
   const H = filmFoot + 90;
 
@@ -207,24 +220,44 @@ function build({nodes:NODES, threads:THREADS}){
     });
     const cols = [...groups.values()].sort((a, b) => a.k - b.k);
     const pos = new Map(), dividers = [];
-    const place = (n, left, i, book) => {
-      const sub = Math.floor(i / STACK), lvl = i % STACK;
-      pos.set(n, {cx:left + sub * (CW + GAP) + CW / 2, top:book ? mainAx - 44 - (lvl + 1) * (CH + GAP) + GAP : mainAx + 38 + lvl * (CH + GAP), lvl});
+    // stack cards away from the axis; when a stack is full, start another one beside it
+    const pack = list => {
+      const subs = [];
+      list.forEach(n => {
+        let s = subs[subs.length - 1];
+        if (!s || s.h + GAP + n.h > COLH) subs.push(s = {cards:[], h:-GAP, w:0});
+        s.cards.push(n); s.h += GAP + n.h; s.w = Math.max(s.w, n.w);
+      });
+      return {subs, w:subs.reduce((a, s) => a + s.w + GAP, 0) - GAP};
     };
+    const placeAll = (list, left, book) => {
+      let x = left;
+      pack(list).subs.forEach(s => {
+        let y = 0;
+        s.cards.forEach((n, i) => {
+          // a little sideways drift inside the stack, so it reads less like a grid
+          const room = s.w - n.w, cx = x + n.w / 2 + room * ((hash(n.id) % 100) / 100);
+          pos.set(n, {cx, top:book ? mainAx - 44 - y - n.h : mainAx + 38 + y, outer:i === s.cards.length - 1});
+          y += n.h + GAP;
+        });
+        x += s.w + GAP;
+      });
+    };
+    const widthOf = (b, f) => Math.max(CW * .6, b.length ? pack(b).w : 0, f.length ? pack(f).w : 0);
     // cards with no date/year sit on a shelf at the start
     const looseB = loose.filter(n => n.kind === 'book'), looseF = loose.filter(n => n.kind === 'film');
-    const shelfW = loose.length ? Math.max(Math.ceil(looseB.length / STACK), Math.ceil(looseF.length / STACK)) * (CW + GAP) - GAP : 0;
-    looseB.forEach((n, i) => place(n, START, i, true));
-    looseF.forEach((n, i) => place(n, START, i, false));
+    const shelfW = loose.length ? widthOf(looseB, looseF) : 0;
+    placeAll(looseB, START, true);
+    placeAll(looseF, START, false);
     let x = START + (loose.length ? shelfW + 90 : 0), prev = null;
     if (loose.length) dividers.push({x:x - 45, label:null});
     cols.forEach(c => {
-      c.w = Math.max(1, Math.ceil(c.books.length / STACK), Math.ceil(c.films.length / STACK)) * (CW + GAP) - GAP;
+      c.w = widthOf(c.books, c.films);
       if (prev) x += COLGAP + spec.gap(prev.k, c.k);
       if (!prev || spec.divide(prev.k, c.k)) dividers.push({x:x - (prev ? (COLGAP + spec.gap(prev.k, c.k)) / 2 : 22), label:spec.bigLabel(c.k)});
       c.left = x; c.x = x + c.w / 2; x += c.w; prev = c;
-      c.books.forEach((n, i) => place(n, c.left, i, true));
-      c.films.forEach((n, i) => place(n, c.left, i, false));
+      placeAll(c.books, c.left, true);
+      placeAll(c.films, c.left, false);
     });
     return {spec, cols, pos, dividers, loose, shelfW, end:x};
   }
@@ -255,7 +288,6 @@ function build({nodes:NODES, threads:THREADS}){
   const ns = 'http://www.w3.org/2000/svg';
   const el = (tag, attrs = {}, parent) => { const e = document.createElementNS(ns, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); parent && parent.appendChild(e); return e; };
   let seed = 7; const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-  const hash = s => [...s].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7);
   function wobble(x1, y1, x2, y2, amp = 1.2, step = 40){
     const len = Math.hypot(x2 - x1, y2 - y1) || 1, n = Math.max(2, Math.round(len / step));
     const nx = -(y2 - y1) / len, ny = (x2 - x1) / len;
@@ -301,7 +333,7 @@ function build({nodes:NODES, threads:THREADS}){
   NODES.forEach(n => {
     const c = document.createElement('div');
     c.className = 'card ' + n.kind; c.dataset.id = n.id;
-    Object.assign(c.style, {width:CW + 'px', height:CH + 'px', transitionDelay:`${(hash(n.id) % 100) / 100 * .18}s`});
+    Object.assign(c.style, {width:n.w + 'px', height:n.h + 'px', transitionDelay:`${(hash(n.id) % 100) / 100 * .18}s`});
     const r = ((hash(n.id) % 40) / 10 - 2).toFixed(1);
     c.innerHTML = (n.img
       ? `<div class="ph" style="transform:rotate(${r}deg)"><img alt="" decoding="async" draggable="false"></div>`
@@ -323,19 +355,16 @@ function build({nodes:NODES, threads:THREADS}){
     const Lx = L[mode];
     NODES.forEach(n => {
       const p = Lx.pos.get(n);
-      n.cx = p.cx; n.top = p.top; n.h = CH;
-      n.card.style.transform = `translate3d(${p.cx - CW / 2}px,${p.top}px,0)`;
+      n.cx = p.cx; n.top = p.top;
+      n.card.style.transform = `translate3d(${p.cx - n.w / 2}px,${p.top}px,0)`;
       // tape only on the outermost card of each stack
-      const k = Lx.spec.key(n), col = k == null ? null : Lx.cols.find(c => c.k === k);
-      const list = col ? (n.kind === 'book' ? col.books : col.films) : Lx.loose.filter(m => m.kind === n.kind);
-      const i = list.indexOf(n);
-      n.ph.classList.toggle('tape', i === list.length - 1 || i % STACK === STACK - 1);
+      n.ph.classList.toggle('tape', p.outer);
     });
   }
   function drawThreads(){
     gTh.replaceChildren();
     THREADS.forEach(th => {
-      const A = {x:th.A.cx, y:th.A.top + CH / 2}, B = {x:th.B.cx, y:th.B.top + CH / 2};
+      const A = {x:th.A.cx, y:th.A.top + th.A.h / 2}, B = {x:th.B.cx, y:th.B.top + th.B.h / 2};
       const dx = B.x - A.x, dy = B.y - A.y, len = Math.hypot(dx, dy) || 1;
       const bow = (th.t === 'mine' ? -1 : 1) * Math.min(90, 18 + len * .1);
       const qx = (A.x + B.x) / 2 - dy / len * bow, qy = (A.y + B.y) / 2 + dx / len * bow;
@@ -360,7 +389,7 @@ function build({nodes:NODES, threads:THREADS}){
     };
     NODES.forEach(n => n.met && n.rereads.forEach(r => {
       const rx = xOf(r.d), book = n.kind === 'book';
-      el('path', {class:'leader re', d:`M${n.cx} ${n.top + CH / 2} Q${(n.cx + rx) / 2} ${book ? mainAx - 24 : mainAx + 24} ${rx} ${mainAx}`}, gLead);
+      el('path', {class:'leader re', d:`M${n.cx} ${n.top + n.h / 2} Q${(n.cx + rx) / 2} ${book ? mainAx - 24 : mainAx + 24} ${rx} ${mainAx}`}, gLead);
       el('circle', {cx:rx, cy:mainAx, r:3, fill:'var(--paper)', stroke:'var(--ink)', 'stroke-width':1.1}, gLead);
     }));
   }
@@ -463,7 +492,7 @@ function build({nodes:NODES, threads:THREADS}){
   const fitScale = () => Math.max(MIN, Math.min(1, vp.clientHeight / H * .97));
   function goStart(){ view.s = fitScale(); view.x = 0; view.y = Math.max(0, (vp.clientHeight - H * view.s) / 2); apply(); }
   function goEnd(){ view.s = fitScale(); view.x = vp.clientWidth - (L[mode].end + 160) * view.s; view.y = Math.max(0, (vp.clientHeight - H * view.s) / 2); apply(); }
-  function focusCard(n){ view.s = 1; view.x = vp.clientWidth / 2 - n.cx; view.y = vp.clientHeight / 2 - (n.top + CH / 2); apply(); }
+  function focusCard(n){ view.s = 1; view.x = vp.clientWidth / 2 - n.cx; view.y = vp.clientHeight / 2 - (n.top + n.h / 2); apply(); }
   vp.addEventListener('wheel', e => {
     e.preventDefault();
     const r = vp.getBoundingClientRect();
