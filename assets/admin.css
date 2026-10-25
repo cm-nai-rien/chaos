@@ -231,3 +231,10 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Site switch sits above the panel on admin pages */
 .admin-shell { width: 640px; max-width: 100%; }
 .admin-shell .site-switch { width: 100%; padding: 0 0 16px; }
+
+/* --- Sign-in helpers --- */
+.visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); border: 0; }
+.masked { -webkit-text-security: disc; }
+.session-bar { display: flex; justify-content: flex-end; align-items: baseline; gap: 14px; font-size: 0.75rem; color: var(--dim); margin-bottom: 8px; }
+.link-btn { background: none; border: 0; padding: 0; font: inherit; color: inherit; text-decoration: underline; cursor: pointer; width: auto; margin: 0; }
+.link-btn:hover { opacity: 0.7; }

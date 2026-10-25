@@ -17,19 +17,20 @@
     <!-- 1. LOGIN -->
     <div id="login-screen">
         <h1>Chaos Book Portal</h1>
-        <div class="access-btn-group">
-            <input type="password" id="password-input" placeholder="Secret Key">
-            <input type="password" id="token-input" placeholder="GitHub Token">
-            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the chaos repo. Works for both admin pages.</p>
-            <input type="password" id="gkey-input" placeholder="Google Books API Key (optional)">
+        <form id="login-form" class="access-btn-group" autocomplete="on">
+            <input type="text" name="username" autocomplete="username" value="chaos-admin" class="visually-hidden" readonly tabindex="-1" aria-hidden="true">
+            <input type="password" id="token-input" name="password" autocomplete="current-password" placeholder="GitHub Token">
+            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the chaos repo. Works for both admin pages. Your browser can save it like a password; after signing in it stays remembered here for 30 days.</p>
+            <input type="text" id="gkey-input" autocomplete="off" spellcheck="false" class="masked" placeholder="Google Books API Key (optional)">
             <p class="hint">Free key from console.cloud.google.com (Books API). Without it, Google search can hit a shared daily limit. Remembered in this browser.</p>
-            <button onclick="checkAccess()" style="width: 200px; margin-top: 12px;">Enter</button>
-            <p id="error-msg" style="color: var(--color-red); display: none; margin-top: 10px;">Access Denied</p>
-        </div>
+            <button type="submit" style="width: 200px; margin-top: 12px;">Sign in</button>
+            <p id="error-msg" style="color: var(--color-red); display: none; margin-top: 10px;"></p>
+        </form>
     </div>
 
     <!-- 2. ADMIN PANEL -->
     <div id="admin-panel">
+        <div class="session-bar"><span id="session-status"></span><button type="button" class="link-btn" data-sign-out>Sign out</button></div>
         <h1>Add New Book</h1>
 
         <div class="form-group">
@@ -113,8 +114,8 @@
     </div>
 </div>
 
+    <script src="../assets/admin-auth.js"></script>
     <script>
-        const SECRET_KEY  = 'chaos';
         const GITHUB_REPO = 'cm-nai-rien/chaos';
         const BOOKS_FILE  = 'books.json';        // read by the page (same folder)
         const BOOKS_PATH  = 'books/books.json';  // path inside the GitHub repo
@@ -132,9 +133,7 @@
         function storageGet(store, key) { try { return store.getItem(key) || ''; } catch (e) { return ''; } }
         function storageSet(store, key, val) { try { val ? store.setItem(key, val) : store.removeItem(key); } catch (e) {} }
 
-        $('token-input').value = storageGet(sessionStorage, 'adminToken');
-        $('gkey-input').value  = storageGet(localStorage, 'googleBooksKey');
-        if ($('token-input').value) enterPanel($('token-input').value, $('gkey-input').value);
+        $('gkey-input').value = storageGet(localStorage, 'googleBooksKey');
 
         // ---------------------------------------------------------------
         // 1. LOGIN
@@ -146,37 +145,16 @@
             return raw.normalize('NFKC').replace(/[^\x21-\x7E]/g, '');
         }
 
-        function enterPanel(tok, gkey) {
-            githubToken = cleanKey(tok);
-            googleKey = cleanKey(gkey || '');
-            storageSet(sessionStorage, 'adminToken', githubToken);
-            storageSet(localStorage, 'googleBooksKey', googleKey);
-            $('login-screen').style.display = 'none';
-            $('admin-panel').style.display = 'block';
+        // Sign-in lives in assets/admin-auth.js (remembered for 30 days, shared with the movie admin)
+        function enterPanel(tok) {
+            githubToken = tok;
+            googleKey = storageGet(localStorage, 'googleBooksKey');
             $('search-input').focus();
             loadKnownGenres();
         }
-
-        function checkAccess() {
-            const pwd = $('password-input').value;
-            const tok = cleanKey($('token-input').value);
-            const err = $('error-msg');
-            if (pwd === SECRET_KEY && tok) {
-                if (!/^(github_pat_|ghp_)[A-Za-z0-9_]+$/.test(tok)) {
-                    err.style.display = 'block';
-                    err.innerText = 'That GitHub token looks wrong. It should start with github_pat_ — try copying it again.';
-                    return;
-                }
-                $('token-input').value = tok;
-                enterPanel(tok, cleanKey($('gkey-input').value));
-            } else {
-                $('error-msg').style.display = 'block';
-                $('error-msg').innerText = !tok ? 'GitHub token required' : 'Access Denied';
-            }
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && $('login-screen').style.display !== 'none') checkAccess();
+        ChaosAuth.init({
+            onEnter: enterPanel,
+            beforeEnter: () => storageSet(localStorage, 'googleBooksKey', cleanKey($('gkey-input').value))
         });
 
         // Genres already used on the site, offered as one-click chips
@@ -486,7 +464,8 @@
                 const headers = { Authorization: `token ${githubToken}`, Accept: 'application/vnd.github+json' };
 
                 const getRes = await fetch(api, { headers, cache: 'no-store' });
-                if (!getRes.ok) throw new Error(getRes.status === 401 ? 'GitHub token rejected.' : `GitHub read failed (${getRes.status}).`);
+                if (getRes.status === 401) { ChaosAuth.expire(); throw new Error('GitHub no longer accepts the saved token. Reload the page and sign in again.'); }
+                if (!getRes.ok) throw new Error(`GitHub read failed (${getRes.status}).`);
                 const fileData = await getRes.json();
                 const books = JSON.parse(base64ToText(fileData.content));
 

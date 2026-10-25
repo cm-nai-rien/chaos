@@ -17,17 +17,18 @@
     <!-- 1. LOGIN SCREEN -->
     <div id="login-screen">
         <h1>Chaos Movie Portal</h1>
-        <div class="access-btn-group">
-            <input type="password" id="password-input" placeholder="Secret Key">
-            <input type="password" id="token-input" placeholder="GitHub Token">
-            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the chaos repo. Works for both admin pages.</p>
-            <button onclick="checkAccess()" style="width: 200px; margin-top: 12px;">Enter</button>
-            <p id="error-msg" style="color: var(--color-red); display: none; margin-top: 10px;">Access Denied</p>
-        </div>
+        <form id="login-form" class="access-btn-group" autocomplete="on">
+            <input type="text" name="username" autocomplete="username" value="chaos-admin" class="visually-hidden" readonly tabindex="-1" aria-hidden="true">
+            <input type="password" id="token-input" name="password" autocomplete="current-password" placeholder="GitHub Token">
+            <p class="hint">Fine-grained token with Contents: Read &amp; Write on the chaos repo. Works for both admin pages. Your browser can save it like a password; after signing in it stays remembered here for 30 days.</p>
+            <button type="submit" style="width: 200px; margin-top: 12px;">Sign in</button>
+            <p id="error-msg" style="color: var(--color-red); display: none; margin-top: 10px;"></p>
+        </form>
     </div>
 
     <!-- 2. ADMIN PANEL -->
     <div id="admin-panel">
+        <div class="session-bar"><span id="session-status"></span><button type="button" class="link-btn" data-sign-out>Sign out</button></div>
         <h1>Add New Movie</h1>
 
         <div class="form-group">
@@ -72,8 +73,8 @@
     </div>
 </div>
 
+    <script src="../assets/admin-auth.js"></script>
     <script>
-        const SECRET_KEY = "chaos";
         const API_KEY = 'd8a1d72438cc3042bcfb451bd4ef1a07';
         const GITHUB_REPO = 'cm-nai-rien/chaos';
         const MOVIES_FILE = 'movies/movies.json'; // path inside the GitHub repo
@@ -90,41 +91,12 @@
             return raw.normalize('NFKC').replace(/[^\x21-\x7E]/g, '');
         }
 
+        // Sign-in lives in assets/admin-auth.js (remembered for 30 days, shared with the book admin)
         function enterPanel(tok) {
-            githubToken = cleanKey(tok);
-            try { sessionStorage.setItem('adminToken', githubToken); } catch (e) {}
-            document.getElementById('login-screen').style.display = 'none';
-            document.getElementById('admin-panel').style.display = 'block';
+            githubToken = tok;
             document.getElementById('watch-date').valueAsDate = new Date();
         }
-
-        // The book admin shares this address, so a token saved there opens this page too
-        try {
-            const saved = sessionStorage.getItem('adminToken');
-            if (saved) enterPanel(saved);
-        } catch (e) {}
-
-        function checkAccess() {
-            const pwd = document.getElementById('password-input').value;
-            const tok = cleanKey(document.getElementById('token-input').value);
-            if (pwd === SECRET_KEY && tok) {
-                if (!/^(github_pat_|ghp_)[A-Za-z0-9_]+$/.test(tok)) {
-                    document.getElementById('error-msg').style.display = 'block';
-                    document.getElementById('error-msg').innerText = 'That GitHub token looks wrong. It should start with github_pat_ — try copying it again.';
-                    return;
-                }
-                enterPanel(tok);
-            } else {
-                document.getElementById('error-msg').style.display = 'block';
-                document.getElementById('error-msg').innerText = !tok ? 'GitHub token required' : 'Access Denied';
-            }
-        }
-
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Enter' && document.getElementById('login-screen').style.display !== 'none') {
-                checkAccess();
-            }
-        });
+        ChaosAuth.init({ onEnter: enterPanel });
 
         // 2. SEARCH
         function onSearchInput() {
@@ -307,6 +279,7 @@
                     `https://api.github.com/repos/${GITHUB_REPO}/contents/${MOVIES_FILE}`,
                     { headers: { Authorization: `token ${githubToken}` } }
                 );
+                if (getRes.status === 401) { ChaosAuth.expire(); throw new Error('GitHub no longer accepts the saved token. Reload the page and sign in again.'); }
                 if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
                 const fileData = await getRes.json();
 

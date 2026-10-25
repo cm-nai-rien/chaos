@@ -20,9 +20,7 @@ body{margin:0;display:flex;flex-direction:column;background:var(--paper);color:v
 
 /* light page: ink instead of parchment for the shared header and switch */
 body{--text-primary:var(--ink)}
-.page-header{padding-bottom:1.4rem}
-.sub{margin:0;font-size:.95rem;font-weight:300;line-height:1.5;max-width:620px}
-.sub .count{color:var(--ink-soft)}
+.page-header{padding-bottom:1rem}
 
 
 #viewport{position:relative;flex:1;overflow:hidden;touch-action:none;cursor:grab;border-top:1px solid rgba(61,36,9,.15)}
@@ -121,7 +119,6 @@ aside li b{font-weight:500}
       <button type="button" class="nav-link" data-mode="made" aria-pressed="false">When it was made</button>
     </div>
   </div>
-  <p class="sub">Everything I've read or watched, hung on the day I met it. Switch the timeline to see when each work was made. <span class="count" id="count"></span></p>
 </header>
 <div id="viewport">
   <div class="loading" id="loading">Loading…</div>
@@ -191,7 +188,6 @@ load().then(build).catch(err => { document.getElementById('loading').textContent
 function build({nodes:NODES, threads:THREADS}){
   document.getElementById('loading').remove();
   const byId = Object.fromEntries(NODES.map(n => [n.id, n]));
-  document.getElementById('count').textContent = `${NODES.filter(n => n.kind === 'film').length} films and ${NODES.filter(n => n.kind === 'book').length} books so far.`;
 
   const CW = 70, CH = 104, GAP = 5, STACK = 6, COLGAP = 18, START = 330;
   const mainAx = 70 + STACK * (CH + GAP) + 46;
@@ -417,7 +413,6 @@ function build({nodes:NODES, threads:THREADS}){
         ${n.by ? `<dt>${n.kind === 'film' ? 'Director' : 'Author'}</dt><dd>${esc(n.by)}</dd>` : ''}
         ${yearText(n) ? `<dt>Made</dt><dd>${yearText(n)}</dd>` : ''}
         ${n.rating ? `<dt>My rating</dt><dd>${n.rating}</dd>` : ''}
-        <dt>Logged in</dt><dd>${esc(n.src)}</dd>
       </dl>
       ${n.quote ? `<div class="q">${esc(n.quote)}<span class="from">What I wrote</span></div>` : ''}
       ${rel.length ? `<dl><dt>Threads</dt><dd><ul>${rel.map(t => `<li class="${t.t}"><b>${esc((t.A === n ? t.B : t.A).en)}</b>: ${esc(t.en)}</li>`).join('')}</ul></dd></dl>` : ''}`;
