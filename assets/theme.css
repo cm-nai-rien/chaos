@@ -198,3 +198,45 @@ html { scrollbar-gutter: stable; }   /* same width with or without a scrollbar *
 @media (max-width: 800px) {
     .page-header h1 { font-size: clamp(2rem, 10vw, 3rem); }
 }
+
+/* ==========================================================================
+   NOTE EDITOR (assets/chaos.js → Chaos.notes.attach)
+   Shared by the Movies and Books card popups and the Chronology card panel.
+   Colors follow the surrounding text, so it works on dark and light pages.
+   ========================================================================== */
+.note-editor { margin-top: 12px; font-family: var(--font-body); }
+.note-btn {
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    padding: 6px 14px;
+    font: inherit;
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    opacity: 0.7;
+    transition: opacity 0.2s ease;
+}
+.note-btn:hover { opacity: 1; }
+.note-btn:disabled { opacity: 0.4; cursor: wait; }
+.note-save { opacity: 1; }
+.note-form textarea {
+    display: block;
+    width: 100%;
+    min-height: 110px;
+    margin-bottom: 10px;
+    padding: 10px 12px;
+    background: transparent;
+    border: 1px solid currentColor;
+    color: inherit;
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 0.95rem;
+    line-height: 1.6;
+    resize: vertical;
+    box-sizing: border-box;
+}
+.note-form textarea:focus { outline: 2px solid currentColor; outline-offset: 1px; }
+.note-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.note-status { font-size: 0.78rem; opacity: 0.75; }

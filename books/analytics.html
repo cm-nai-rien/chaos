@@ -2,9 +2,12 @@
 <html lang="en" data-site="books">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Book Analytics</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <script src="../assets/chaos.js"></script>
     <link rel="stylesheet" href="../assets/theme.css">
     <style>
 
@@ -208,8 +211,8 @@
             document.getElementById('top-ten-list').innerHTML = top.map(b => `
                 <li>
                     <span class="book-info">
-                        <span class="book-title">${b.title}</span>
-                        <span class="book-author">${b.author || ''}</span>
+                        <span class="book-title">${Chaos.esc(b.title)}</span>
+                        <span class="book-author">${Chaos.esc(b.author)}</span>
                     </span>
                     <span class="rating">${'★'.repeat(parseInt(b.rating))}${'☆'.repeat(5 - parseInt(b.rating))}</span>
                 </li>

@@ -2,6 +2,8 @@
 <html lang="en" data-site="movies">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google tag (gtag.js) -->                                                   
         <script async                                                                   
@@ -153,8 +155,8 @@
                 <div class="modal-title" id="modal-title"></div>
                 <div class="modal-sub" id="modal-sub"></div>
                 <div class="modal-notes-view" id="modal-notes-view"></div>
+                <div id="modal-notes-editor"></div>
                 <div class="modal-edit-area" id="modal-edit-area">
-                    <textarea id="edit-notes-input" rows="4" placeholder="Add your notes…"></textarea>
                     <div class="edit-rating-row">
                         <span>Rating (0–10)</span>
                         <input type="number" id="edit-rating-input" step="0.5" min="0" max="10">
@@ -175,7 +177,7 @@
                     </div>
                     <div class="modal-status" id="modal-status"></div>
                 </div>
-                <button class="btn-edit-note" id="btn-edit-note" onclick="enterEditMode()" style="display:none">Edit</button>
+                <button class="btn-edit-note" id="btn-edit-note" onclick="enterEditMode()" style="display:none">Edit details</button>
             </div>
         </div>
     </div>
@@ -185,7 +187,10 @@
         <div class="footer-links"><a href="../">Home</a><a href="admin.html">Admin Portal</a></div>
     </div>
 
+    <script src="../assets/admin-auth.js"></script>
+    <script src="../assets/chaos.js"></script>
     <script>
+        const esc = Chaos.esc;
         let allMovies = [];
         let filteredMovies = [];
         let currentYearMovies = [];
@@ -196,7 +201,7 @@
         fetch('movies.json')
             .then(r => r.json())
             .then(movies => {
-                allMovies = movies.filter(m => m.poster);
+                allMovies = Chaos.notes.applyPending('movies', movies).filter(m => m.poster);
                 
                 renderFeatured(allMovies); 
                 setupTabs(allMovies);
@@ -221,7 +226,7 @@
                 document.getElementById('f-rating').innerText = ratingNum > 0 ? `★ ${latestMovie.rating} / 10` : '';
                 let notes = latestMovie.review;
                 if (!notes || notes === "nan") notes = "No notes added.";
-                document.getElementById('f-notes').innerHTML = `&ldquo;${notes}&rdquo;`;
+                document.getElementById('f-notes').textContent = `“${Chaos.plain(notes)}”`;
             }
         }
 
@@ -320,12 +325,12 @@
             });
             const decContainer = document.getElementById('container-decade');
             Array.from(decades).sort((a,b) => b - a).forEach(d => {
-                decContainer.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="decade" value="${d}" onchange="applyFilters()"> ${d}s</label>`;
+                decContainer.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="decade" value="${esc(d)}" onchange="applyFilters()"> ${esc(d)}s</label>`;
             });
             const counContainer = document.getElementById('container-country');
             Array.from(countries).sort().forEach(c => {
                 let name = c; try{name=countryNames.of(c);}catch{}
-                counContainer.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="country" value="${c}" onchange="applyFilters()"> ${name}</label>`;
+                counContainer.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="country" value="${esc(c)}" onchange="applyFilters()"> ${esc(name)}</label>`;
             });
         }
 
@@ -417,17 +422,17 @@
 
                 el.innerHTML = `
                     <div class="card-image-wrapper">
-                        <img src="${movie.poster}" alt="${movie.title}" loading="lazy">
+                        <img src="${esc(movie.poster)}" alt="${esc(movie.title)}" loading="lazy">
                         <div class="info">
-                            <div class="info-date">${movie.date_display}</div>
-                            <div class="info-notes">${reviewText}</div>
+                            <div class="info-date">${esc(movie.date_display)}</div>
+                            <div class="info-notes">${esc(Chaos.plain(reviewText))}</div>
                         </div>
                     </div>
                     <div class="card-details">
-                        <div class="card-title">${movie.title}</div>
-                        <div class="card-meta-row"><span>${yearDisplay}</span><span class="card-rating">${ratingDisplay}</span></div>
-                        <div class="card-director">${directorDisplay}</div>
-                        <div class="card-watched">${movie.date_display}</div>
+                        <div class="card-title">${esc(movie.title)}</div>
+                        <div class="card-meta-row"><span>${esc(yearDisplay)}</span><span class="card-rating">${esc(ratingDisplay)}</span></div>
+                        <div class="card-director">${esc(directorDisplay)}</div>
+                        <div class="card-watched">${esc(movie.date_display)}</div>
                     </div>
                 `;
                 el.querySelector('.card-image-wrapper').addEventListener('click', () => openModal(movie));
@@ -436,9 +441,8 @@
         }
 
         // --- MODAL ---
-        const GITHUB_REPO = 'cm-nai-rien/chaos';
         const MOVIES_FILE = 'movies/movies.json'; // path inside the GitHub repo
-        const adminToken = sessionStorage.getItem('adminToken');
+        const adminToken = ChaosAuth.token();
         let currentModalMovie = null;
 
         function openModal(movie) {
@@ -456,8 +460,13 @@
             document.getElementById('modal-sub').innerText = [yearDisplay, ratingDisplay].filter(Boolean).join(' · ') + directorDisplay;
 
             const notesEl = document.getElementById('modal-notes-view');
-            notesEl.innerText = notes || 'No notes added.';
-            notesEl.classList.toggle('empty', !notes);
+            const editorHost = document.getElementById('modal-notes-editor');
+            editorHost.replaceChildren();
+            Chaos.notes.attach({
+                host: editorHost, kind: 'movies', item: movie,
+                render: text => { notesEl.innerText = text || 'No notes added.'; notesEl.classList.toggle('empty', !text); },
+                onSaved: () => applyFilters()
+            });
 
             document.getElementById('modal-edit-area').style.display = 'none';
             document.getElementById('modal-notes-view').style.display = 'block';
@@ -475,100 +484,53 @@
         }
 
         function enterEditMode() {
-            const notes = (!currentModalMovie.review || currentModalMovie.review === 'nan') ? '' : currentModalMovie.review;
-            document.getElementById('edit-notes-input').value = notes;
             document.getElementById('edit-rating-input').value = getRating(currentModalMovie) || '';
             const ds = currentModalMovie.date_sort;
             document.getElementById('edit-date-input').value = (ds && ds !== '0000-00-00') ? ds : '';
-            document.getElementById('modal-notes-view').style.display = 'none';
+            document.getElementById('modal-notes-editor').style.display = 'none';
             document.getElementById('btn-edit-note').style.display = 'none';
             document.getElementById('modal-edit-area').style.display = 'block';
             document.getElementById('modal-status').innerText = '';
             document.getElementById('confirm-delete-row').style.display = 'none';
             document.getElementById('btn-delete-movie').style.display = 'block';
-            document.getElementById('edit-notes-input').focus();
+            document.getElementById('edit-rating-input').focus();
         }
 
         function cancelEdit() {
             document.getElementById('modal-edit-area').style.display = 'none';
-            document.getElementById('modal-notes-view').style.display = 'block';
+            document.getElementById('modal-notes-editor').style.display = '';
             document.getElementById('btn-edit-note').style.display = adminToken ? 'inline-block' : 'none';
         }
 
+        // rating and watch date (the note has its own editor above)
         async function saveEdit() {
-            const newNotes = document.getElementById('edit-notes-input').value.trim();
             const newRating = document.getElementById('edit-rating-input').value;
             const newDateSort = document.getElementById('edit-date-input').value;
             const newDateDisplay = formatDateDisplay(newDateSort);
             const statusEl = document.getElementById('modal-status');
+            const movie = currentModalMovie;
+            const same = m => m.title === movie.title && m.date_sort === movie.date_sort;
 
             statusEl.innerText = 'Saving…';
             document.querySelector('.btn-complete').disabled = true;
-
             try {
-                const getRes = await fetch(
-                    `https://api.github.com/repos/${GITHUB_REPO}/contents/${MOVIES_FILE}`,
-                    { headers: { Authorization: `token ${adminToken}` } }
-                );
-                if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
-                const fileData = await getRes.json();
-                const _b64 = fileData.content.replace(/\n/g, '');
-                const _bytes = Uint8Array.from(atob(_b64), c => c.charCodeAt(0));
-                const movies = JSON.parse(new TextDecoder('utf-8').decode(_bytes));
+                await Chaos.github.update(MOVIES_FILE, movies => {
+                    const target = movies.find(same);
+                    if (!target) return false;
+                    target.rating = newRating;
+                    if (newDateSort) { target.date_sort = newDateSort; target.date_display = newDateDisplay; }
+                }, `Edit: ${movie.title}`);
 
-                const idx = movies.findIndex(m =>
-                    m.title === currentModalMovie.title && m.date_sort === currentModalMovie.date_sort
-                );
-                if (idx !== -1) {
-                    movies[idx].review = newNotes;
-                    movies[idx].rating = newRating;
-                    if (newDateSort) { movies[idx].date_sort = newDateSort; movies[idx].date_display = newDateDisplay; }
-                }
-
-                const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(movies, null, 4))));
-                const putRes = await fetch(
-                    `https://api.github.com/repos/${GITHUB_REPO}/contents/${MOVIES_FILE}`,
-                    {
-                        method: 'PUT',
-                        headers: { Authorization: `token ${adminToken}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message: `Edit: ${currentModalMovie.title} notes`,
-                            content: newContent,
-                            sha: fileData.sha
-                        })
-                    }
-                );
-                if (!putRes.ok) {
-                    const err = await putRes.json();
-                    throw new Error(err.message || `GitHub PUT failed: ${putRes.status}`);
-                }
-
-                // Update local data so UI reflects immediately
-                const oldDateSort = currentModalMovie.date_sort;
-                const localIdx = allMovies.findIndex(m =>
-                    m.title === currentModalMovie.title && m.date_sort === oldDateSort
-                );
-                currentModalMovie.review = newNotes;
-                currentModalMovie.rating = newRating;
-                if (newDateSort) { currentModalMovie.date_sort = newDateSort; currentModalMovie.date_display = newDateDisplay; }
-                if (localIdx !== -1) {
-                    allMovies[localIdx].review = newNotes;
-                    allMovies[localIdx].rating = newRating;
-                    if (newDateSort) { allMovies[localIdx].date_sort = newDateSort; allMovies[localIdx].date_display = newDateDisplay; }
-                }
+                movie.rating = newRating;
+                if (newDateSort) { movie.date_sort = newDateSort; movie.date_display = newDateDisplay; }
                 if (newDateSort) document.getElementById('modal-watch-date').innerText = newDateDisplay;
-
-                // Refresh notes view
-                const notesEl = document.getElementById('modal-notes-view');
-                notesEl.innerText = newNotes || 'No notes added.';
-                notesEl.classList.toggle('empty', !newNotes);
+                const ratingNum = getRating(movie);
+                const yearDisplay = (movie.year && movie.year !== 'Unknown') ? movie.year : '';
+                document.getElementById('modal-sub').innerText = [yearDisplay, ratingNum > 0 ? `★ ${movie.rating}` : 'Unrated'].filter(Boolean).join(' · ') + (movie.director ? ` · ${movie.director}` : '');
+                applyFilters();
 
                 statusEl.innerText = '✓ Saved';
-                setTimeout(() => {
-                    cancelEdit();
-                    statusEl.innerText = '';
-                }, 800);
-
+                setTimeout(() => { cancelEdit(); statusEl.innerText = ''; }, 800);
             } catch (e) {
                 statusEl.innerText = `Error: ${e.message}`;
             } finally {
@@ -594,39 +556,12 @@
             confirmRow.style.display = 'none';
 
             try {
-                const getRes = await fetch(
-                    `https://api.github.com/repos/${GITHUB_REPO}/contents/${MOVIES_FILE}`,
-                    { headers: { Authorization: `token ${adminToken}` } }
-                );
-                if (!getRes.ok) throw new Error(`GitHub GET failed: ${getRes.status}`);
-                const fileData = await getRes.json();
-                const _b64 = fileData.content.replace(/\n/g, '');
-                const _bytes = Uint8Array.from(atob(_b64), c => c.charCodeAt(0));
-                const movies = JSON.parse(new TextDecoder('utf-8').decode(_bytes));
-
-                const idx = movies.findIndex(m =>
-                    m.title === currentModalMovie.title && m.date_sort === currentModalMovie.date_sort
-                );
-                if (idx === -1) throw new Error('Movie not found in data.');
-                movies.splice(idx, 1);
-
-                const newContent = btoa(unescape(encodeURIComponent(JSON.stringify(movies, null, 4))));
-                const putRes = await fetch(
-                    `https://api.github.com/repos/${GITHUB_REPO}/contents/${MOVIES_FILE}`,
-                    {
-                        method: 'PUT',
-                        headers: { Authorization: `token ${adminToken}`, 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            message: `Delete: ${currentModalMovie.title}`,
-                            content: newContent,
-                            sha: fileData.sha
-                        })
-                    }
-                );
-                if (!putRes.ok) {
-                    const err = await putRes.json();
-                    throw new Error(err.message || `GitHub PUT failed: ${putRes.status}`);
-                }
+                const movie = currentModalMovie;
+                await Chaos.github.update(MOVIES_FILE, movies => {
+                    const idx = movies.findIndex(m => m.title === movie.title && m.date_sort === movie.date_sort);
+                    if (idx === -1) return false;
+                    movies.splice(idx, 1);
+                }, `Delete: ${movie.title}`);
 
                 // Remove from local arrays and re-render
                 const localIdx = allMovies.findIndex(m =>

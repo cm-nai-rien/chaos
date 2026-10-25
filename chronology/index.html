@@ -2,8 +2,13 @@
 <html lang="en" data-site="books">
 <head>
 <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Chao's Chronology</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="preconnect" href="https://image.tmdb.org">
 <link rel="stylesheet" href="../assets/theme.css">
 <style>
 :root{
@@ -88,11 +93,11 @@ svg.over{pointer-events:none}
 
 aside{position:fixed;right:18px;top:18px;width:340px;max-height:calc(100vh - 36px);overflow:auto;background:#fffaf0;border:1px solid var(--ink);padding:20px 20px 16px;box-shadow:10px 10px 0 rgba(61,36,9,.2);font-size:14px;font-weight:300;line-height:1.55;z-index:20;cursor:auto}
 aside .x{position:absolute;right:8px;top:4px;font-size:24px;background:none;border:0;cursor:pointer;color:var(--ink);font-family:var(--body);font-weight:200}
-aside .eyebrow{font-size:.7rem;letter-spacing:2px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+aside .eyebrow{font-size:.7rem;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
 aside h2{font-family:var(--display);font-style:italic;font-weight:400;font-size:1.6rem;margin:0;line-height:1.15}
 aside .orig{font-size:12px;color:var(--ink-soft);font-style:italic}
-aside dl{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:14px 0 0}
-aside dt{font-size:.68rem;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink-soft);padding-top:2px}
+aside dl{display:grid;grid-template-columns:auto 1fr;gap:0;margin:14px 0 0}
+aside dt{font-size:.68rem;letter-spacing:.5px;text-transform:uppercase;color:var(--ink-soft);padding:2px 10px 0 0}
 aside dd{margin:0}
 aside .note{display:block;font-size:12px;color:var(--ink-soft)}
 aside .q{margin-top:14px;padding:10px 12px;background:var(--paper);border-left:3px solid var(--ink-soft);font-family:var(--display);font-style:italic;font-size:14px;white-space:pre-line}
@@ -140,6 +145,8 @@ aside li b{font-weight:500}
 </div>
 <aside id="panel" hidden></aside>
 
+<script src="../assets/admin-auth.js"></script>
+<script src="../assets/chaos.js"></script>
 <script>
 // Built at load time from the same files the Movies and Books pages use,
 // so anything added there shows up here. curated.json adds essays, dates and threads.
@@ -147,23 +154,25 @@ const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov
 const validDate = d => d && /^\d{4}-\d{2}-\d{2}$/.test(d) && !d.startsWith('0000');
 const slug = s => s.toLowerCase().normalize('NFKD').replace(/[^\w　-鿿]+/g, '-').replace(/^-|-$/g, '').slice(0, 60);
 const shortTitle = t => { const s = t.split(/\s*[:：(（]/)[0].trim(); return s.length >= 2 ? s : t; };
-const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const esc = Chaos.esc;
 
 async function load(){
   const get = u => fetch(u, {cache:'no-cache'}).then(r => { if (!r.ok) throw new Error(u); return r.json(); });
   const [movies, books, cur] = await Promise.all([get('../movies/movies.json'), get('../books/books.json'), get('curated.json')]);
+  // notes saved a moment ago (still publishing) show up right away
+  Chaos.notes.applyPending('movies', movies); Chaos.notes.applyPending('books', books);
   const nodes = [], seen = new Map();
   movies.slice().sort((a, b) => a.date_sort.localeCompare(b.date_sort)).forEach(m => {
     const key = 'm|' + m.title + '|' + m.year;
     if (seen.has(key)){ seen.get(key).rereads.push({d:m.date_sort, note:'Watched again'}); return; }
     const n = {id:'m-' + slug(m.title) + '-' + m.year, kind:'film', title:m.title, en:m.title, year:parseInt(m.year) || null, met:m.date_sort,
-      img:(m.poster || '').replace('/t/p/w500/', '/t/p/w185/'), quote:(m.review || '').trim() || null,
+      img:Chaos.thumb(m.poster, 185) || null, quote:Chaos.plain(m.review) || null, log:{kind:'movies', item:m},
       rating:m.rating ? `${m.rating}/10` : null, src:m.type === 'tv' ? 'Movie log (TV)' : 'Movie log', rereads:[]};
     seen.set(key, n); nodes.push(n);
   });
   books.forEach(b => {
     nodes.push({id:'b-' + slug(b.title), kind:'book', title:b.title, en:shortTitle(b.title), by:b.author, year:parseInt(b.year_published) || null,
-      met:validDate(b.date_sort) ? b.date_sort : null, img:b.cover || null, quote:(b.review || '').trim() || null,
+      met:validDate(b.date_sort) ? b.date_sort : null, img:Chaos.thumb(b.cover && !/^https?:/.test(b.cover) ? '../books/' + b.cover : b.cover, 240) || null, quote:Chaos.plain(b.review) || null, log:{kind:'books', item:b},
       rating:+b.rating > 0 ? `${b.rating}/5` : null, src:'Book log', rereads:[]});
   });
   const find = spec => {
@@ -174,11 +183,12 @@ async function load(){
   };
   (cur.overrides || []).forEach(o => {
     const n = find(o.match); if (!n) return console.warn('No match for', o.match);
-    const {match, logNote, dropLogDate, ...f} = o;
+    const {match, logNote, dropLogDate, quote, ...f} = o;
+    if (quote) n.essay = quote;
     if (f.met && n.met && f.met !== n.met && !dropLogDate) n.rereads.unshift({d:n.met, note:logNote || 'In my log'});
     Object.assign(n, f);
   });
-  (cur.extras || []).forEach(e => nodes.push({rereads:[], ...e, title:e.en, img:e.img || null}));
+  (cur.extras || []).forEach(({quote, ...e}) => nodes.push({rereads:[], ...e, title:e.en, img:e.img || null, essay:quote || null}));
   nodes.forEach(n => n.rereads.sort((a, b) => a.d.localeCompare(b.d)));
   const threads = (cur.threads || []).map(t => ({...t, A:find(t.a), B:find(t.b)})).filter(t => t.A && t.B);
   return {nodes, threads};
@@ -199,10 +209,11 @@ function build({nodes:NODES, threads:THREADS}){
   // The longest 10% of reviews all get the biggest size; no review = smallest.
   const CJK = /[\u3040-\u30ff\u3400-\u9fff\uf900-\ufaff]/g;
   const words = t => { t = String(t || ''); return (t.match(CJK) || []).length + (t.replace(CJK, ' ').match(/[A-Za-z0-9'’]+/g) || []).length; };
-  const lens = NODES.map(n => words(n.quote)).sort((a, b) => a - b);
+  const wrote = n => Math.max(words(n.quote), words(n.essay));
+  const lens = NODES.map(wrote).sort((a, b) => a - b);
   const cap = Math.max(1, lens[Math.floor(lens.length * .9)] || 1);
   NODES.forEach(n => {
-    const k = .6 + .9 * Math.sqrt(Math.min(words(n.quote), cap) / cap);
+    const k = .6 + .9 * Math.sqrt(Math.min(wrote(n), cap) / cap);
     n.w = Math.round(CW * k); n.h = Math.round(CH * k);
   });
   const filmFoot = mainAx + 38 + STACK * (CH + GAP);
@@ -444,8 +455,14 @@ function build({nodes:NODES, threads:THREADS}){
         ${yearText(n) ? `<dt>Made</dt><dd>${yearText(n)}</dd>` : ''}
         ${n.rating ? `<dt>My rating</dt><dd>${n.rating}</dd>` : ''}
       </dl>
-      ${n.quote ? `<div class="q">${esc(n.quote)}<span class="from">What I wrote</span></div>` : ''}
+      ${n.essay ? `<div class="q">${esc(n.essay)}<span class="from">From my essay</span></div>` : ''}
+      ${n.log ? `<div class="q mine-note" hidden><span class="txt"></span><span class="from">What I wrote</span></div><div class="note-host"></div>` : ''}
       ${rel.length ? `<dl><dt>Threads</dt><dd><ul>${rel.map(t => `<li class="${t.t}"><b>${esc((t.A === n ? t.B : t.A).en)}</b>: ${esc(t.en)}</li>`).join('')}</ul></dd></dl>` : ''}`;
+    if (n.log){
+      const box = panel.querySelector('.mine-note');
+      Chaos.notes.attach({host:panel.querySelector('.note-host'), kind:n.log.kind, item:n.log.item,
+        render: t => { box.hidden = !t; box.querySelector('.txt').textContent = t; n.quote = t || null; }});
+    }
     panel.hidden = false;
     panel.querySelector('.x').onclick = clear;
   }

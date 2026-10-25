@@ -2,6 +2,8 @@
 <html lang="en" data-site="movies">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chao's Lists</title>
     <link rel="stylesheet" href="assets/theme.css">
@@ -255,6 +257,7 @@
 
     <div class="footer-note">© 2026 Chao Wu</div>
 
+    <script src="assets/chaos.js"></script>
     <script>
         const SITES = [
             { key: 'movies', file: 'movies/movies.json', image: 'poster' },
@@ -268,22 +271,25 @@
             return (t.match(CJK) || []).length + (t.replace(CJK, ' ').match(/[A-Za-z0-9'’]+/g) || []).length;
         };
 
+        // covers stored in the repo are written relative to their own folder (e.g. covers/x.jpg)
+        const imageOf = (site, i) => { const u = i[site.image]; return u && !/^https?:/.test(u) ? `${site.key}/${u}` : u; };
+
         const loaded = SITES.map(async site => {
             try {
-                const items = await (await fetch(site.file, { cache: 'no-store' })).json();
+                const items = Chaos.notes.applyPending(site.key, await (await fetch(site.file, { cache: 'no-store' })).json());
                 items.sort((a, b) => String(b.date_sort).localeCompare(String(a.date_sort)));
 
                 const withImage = items.filter(i => i[site.image] && !String(i[site.image]).endsWith('null'));
                 const box = document.getElementById(`${site.key}-covers`);
                 withImage.slice(0, 5).forEach(i => {
                     const img = document.createElement('img');
-                    img.src = i[site.image];
+                    img.src = Chaos.thumb(imageOf(site, i), 300);
                     img.alt = '';
                     img.loading = 'lazy';
                     img.onerror = () => img.remove();
                     box.appendChild(img);
                 });
-                return items.map(i => ({ kind: site.key, date: String(i.date_sort), img: i[site.image], words: reviewLength(i.review) }));
+                return items.map(i => ({ kind: site.key, date: String(i.date_sort), img: Chaos.thumb(imageOf(site, i), 240), words: reviewLength(i.review) }));
             } catch (e) {
                 return [];
             }

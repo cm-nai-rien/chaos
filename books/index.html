@@ -2,6 +2,8 @@
 <html lang="en" data-site="books">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Book List</title>
 
@@ -137,6 +139,7 @@
                 <div class="modal-title" id="modal-title"></div>
                 <div class="modal-sub" id="modal-sub"></div>
                 <div class="modal-notes-view" id="modal-notes-view"></div>
+                <div id="modal-notes-editor"></div>
             </div>
         </div>
     </div>
@@ -146,7 +149,10 @@
         <div class="footer-links"><a href="../">Home</a><a href="admin.html">Admin Portal</a></div>
     </div>
 
+    <script src="../assets/admin-auth.js"></script>
+    <script src="../assets/chaos.js"></script>
     <script>
+        const esc = Chaos.esc, thumb = Chaos.thumb;
         let allBooks = [];
         let filteredBooks = [];
         let currentTabBooks = [];
@@ -155,7 +161,7 @@
         fetch('books.json')
             .then(r => r.json())
             .then(books => {
-                allBooks = books;
+                allBooks = Chaos.notes.applyPending('books', books);
                 renderFeatured(allBooks);
                 setupTabs(allBooks);
                 populateDynamicFilters();
@@ -183,7 +189,7 @@
 
             const coverWrapper = document.getElementById('f-cover-wrapper');
             if (latest.cover) {
-                coverWrapper.innerHTML = `<img id="f-img" src="${latest.cover}" alt="${latest.title}">`;
+                coverWrapper.innerHTML = `<img id="f-img" src="${esc(thumb(latest.cover, 500))}" alt="${esc(latest.title)}">`;
                 coverWrapper.className = 'featured-poster';
             } else {
                 coverWrapper.innerHTML = '📖';
@@ -199,7 +205,7 @@
                 : '';
             let notes = latest.review;
             if (!notes || notes === 'nan') notes = 'No notes added.';
-            document.getElementById('f-notes').innerHTML = `&ldquo;${notes}&rdquo;`;
+            document.getElementById('f-notes').textContent = `“${Chaos.plain(notes)}”`;
         }
 
         function setupTabs(books) {
@@ -290,7 +296,7 @@
                 .sort((a, b) => b[1] - a[1]);
             const genreEl = document.getElementById('container-genre');
             topGenres.forEach(([g, c]) => {
-                genreEl.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="genre" value="${g}" onchange="applyFilters()"> ${g} <span style="opacity:0.45;font-size:0.8em">(${c})</span></label>`;
+                genreEl.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="genre" value="${esc(g)}" onchange="applyFilters()"> ${esc(g)} <span style="opacity:0.45;font-size:0.8em">(${c})</span></label>`;
             });
 
             // Decades (publication year)
@@ -301,7 +307,7 @@
             });
             const dec = document.getElementById('container-decade');
             Array.from(decades).sort((a,b) => b - a).forEach(d => {
-                dec.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="decade" value="${d}" onchange="applyFilters()"> ${d}s</label>`;
+                dec.innerHTML += `<label class="checkbox-label"><input type="checkbox" class="filter-cb" data-category="decade" value="${esc(d)}" onchange="applyFilters()"> ${esc(d)}s</label>`;
             });
         }
 
@@ -379,25 +385,28 @@
                 const ratingDisplay = r > 0 ? '★'.repeat(r) + '☆'.repeat(5 - r) : 'Unrated';
                 const yearDisplay = book.year_published || '';
 
+                const placeholder = `<div class="card-placeholder"><span class="ph-spine">${esc(book.title)}</span><span class="ph-author">${esc(book.author)}</span></div>`;
                 const imgHtml = book.cover
-                    ? `<img src="${book.cover}" alt="${book.title}" loading="lazy" onerror="this.parentNode.innerHTML='<div class=\\'card-placeholder\\'><span class=\\'ph-spine\\'>${book.title.replace(/'/g,"&#39;")}</span><span class=\\'ph-author\\'>${(book.author||'').replace(/'/g,"&#39;")}</span></div>'">`
-                    : `<div class="card-placeholder"><span class="ph-spine">${book.title}</span><span class="ph-author">${book.author || ''}</span></div>`;
+                    ? `<img src="${esc(thumb(book.cover, 400))}" alt="${esc(book.title)}" loading="lazy">`
+                    : placeholder;
 
                 el.innerHTML = `
                     <div class="card-image-wrapper">
                         ${imgHtml}
                         <div class="info">
-                            <div class="info-date">${book.date_display || ''}</div>
-                            <div class="info-notes">${reviewText}</div>
+                            <div class="info-date">${esc(book.date_display)}</div>
+                            <div class="info-notes">${esc(Chaos.plain(reviewText))}</div>
                         </div>
                     </div>
                     <div class="card-details">
-                        <div class="card-title">${book.title}</div>
-                        <div class="card-meta-row"><span>${yearDisplay}</span><span class="card-rating">${ratingDisplay}</span></div>
-                        <div class="card-author">${book.author || ''}</div>
-                        <div class="card-watched">${book.date_display || ''}</div>
+                        <div class="card-title">${esc(book.title)}</div>
+                        <div class="card-meta-row"><span>${esc(yearDisplay)}</span><span class="card-rating">${ratingDisplay}</span></div>
+                        <div class="card-author">${esc(book.author)}</div>
+                        <div class="card-watched">${esc(book.date_display)}</div>
                     </div>
                 `;
+                const img = el.querySelector('img');
+                if (img) img.onerror = () => img.replaceWith(Object.assign(document.createElement('div'), { innerHTML: placeholder }).firstChild);
                 el.querySelector('.card-image-wrapper').addEventListener('click', () => openModal(book));
                 grid.appendChild(el);
             });
@@ -411,7 +420,7 @@
 
             const coverArea = document.getElementById('modal-cover-area');
             if (book.cover) {
-                coverArea.innerHTML = `<img src="${book.cover}" alt="${book.title}" style="width:100%;height:auto;display:block;box-shadow:var(--shadow-retro);">`;
+                coverArea.innerHTML = `<img src="${esc(thumb(book.cover, 600))}" alt="${esc(book.title)}" style="width:100%;height:auto;display:block;box-shadow:var(--shadow-retro);">`;
             } else {
                 coverArea.innerHTML = `<div class="modal-poster-placeholder">📖</div>`;
             }
@@ -423,8 +432,13 @@
             document.getElementById('modal-sub').innerText = (book.author ? book.author + ' · ' : '') + sub;
 
             const notesEl = document.getElementById('modal-notes-view');
-            notesEl.innerText = notes || 'No notes added.';
-            notesEl.classList.toggle('empty', !notes);
+            const editorHost = document.getElementById('modal-notes-editor');
+            editorHost.replaceChildren();
+            Chaos.notes.attach({
+                host: editorHost, kind: 'books', item: book,
+                render: text => { notesEl.innerText = text || 'No notes added.'; notesEl.classList.toggle('empty', !text); },
+                onSaved: () => applyFilters()
+            });
 
             document.getElementById('modal-overlay').classList.add('open');
             document.body.classList.add('panel-open');

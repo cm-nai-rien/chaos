@@ -2,9 +2,12 @@
 <html lang="en" data-site="movies">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Analytics</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.1/dist/chart.umd.min.js" integrity="sha384-jb8JQMbMoBUzgWatfe6COACi2ljcDdZQ2OxczGA3bGNeWe+6DChMTBJemed7ZnvJ" crossorigin="anonymous"></script>
+    <script src="../assets/chaos.js"></script>
     <link rel="stylesheet" href="../assets/theme.css">
     <style>
 
@@ -304,8 +307,8 @@
 
             const listEl = document.getElementById('top-ten-list');
             listEl.innerHTML = topTen.map((movie, i) => `
-                <li data-poster="${movie.poster || ''}">
-                    ${movie.title} <span class="rating">★${movie.rating}</span>
+                <li data-poster="${Chaos.esc(movie.poster)}">
+                    ${Chaos.esc(movie.title)} <span class="rating">★${Chaos.esc(movie.rating)}</span>
                 </li>
             `).join('');
 
@@ -357,11 +360,11 @@
                 const sign = m.diff > 0 ? '+' : '';
                 const cls  = m.diff > 0 ? 'higher' : 'lower';
                 const note = m.review && m.review.length > 5
-                    ? `<div class="diff-review">"${m.review.slice(0, 120)}${m.review.length > 120 ? '…' : ''}"</div>`
+                    ? `<div class="diff-review">"${Chaos.esc(m.review.slice(0, 120))}${m.review.length > 120 ? '…' : ''}"</div>`
                     : '';
                 return `
                 <li>
-                    <div class="diff-movie-title">${m.title}</div>
+                    <div class="diff-movie-title">${Chaos.esc(m.title)}</div>
                     <div class="diff-ratings">
                         <span class="diff-mine">Me: ${parseFloat(m.rating).toFixed(1)}</span>
                         <span class="diff-public">TMDB: ${m.tmdb_rating.toFixed(1)}</span>

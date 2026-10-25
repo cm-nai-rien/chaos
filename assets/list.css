@@ -316,7 +316,7 @@ body.panel-open { overflow: hidden; }
 .modal-notes-view.empty { opacity: 0.35; }
 
 /* Modal editing (used by the movie list's in-place note editor) */
-.btn-edit-note {
+.btn-edit-note { margin-top: 10px;
     background: transparent; border: 1px solid var(--border-ui);
     color: var(--text-primary); padding: 5px 14px;
     font-family: var(--font-body); font-size: 0.75rem;

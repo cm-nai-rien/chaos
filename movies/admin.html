@@ -2,6 +2,9 @@
 <html lang="en" data-site="movies">
 <head>
     <meta charset="UTF-8">
+    <!-- Security: only load from and talk to the sites this page needs -->
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data: https://image.tmdb.org https://books.google.com https://*.googleusercontent.com https://*.media-amazon.com https://covers.openlibrary.org https://archive.org https://*.archive.org https://*.google-analytics.com https://*.googletagmanager.com; connect-src 'self' https://api.github.com https://api.themoviedb.org https://www.googleapis.com https://openlibrary.org https://*.google-analytics.com https://*.analytics.google.com https://*.googletagmanager.com; object-src 'none'; base-uri 'self'; form-action 'self'">
+    <meta name="robots" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chaos Movie Admin</title>
     <link rel="stylesheet" href="../assets/theme.css">
@@ -138,14 +141,14 @@
                 const year  = (r.release_date || r.first_air_date || '').substring(0, 4);
                 const type  = r.media_type;
                 const poster = r.poster_path
-                    ? `<img class="result-poster" src="https://image.tmdb.org/t/p/w92${r.poster_path}" alt="">`
+                    ? `<img class="result-poster" src="https://image.tmdb.org/t/p/w92${escapeHtml(r.poster_path)}" alt="">`
                     : `<div class="result-cover-placeholder">🎬</div>`;
                 return `
                 <div class="search-result-item" data-index="${i}" onmousedown="selectResult(${i})">
                     ${poster}
                     <div class="result-info">
                         <div class="result-title">${escapeHtml(title)}</div>
-                        <div class="result-meta">${year || '—'}</div>
+                        <div class="result-meta">${escapeHtml(year) || '—'}</div>
                     </div>
                     <span class="result-badge ${type === 'tv' ? 'badge-tv' : 'badge-movie'}">${type === 'tv' ? 'TV' : 'Film'}</span>
                 </div>`;
