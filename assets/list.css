@@ -17,46 +17,7 @@ body {
 
 body.panel-open { overflow: hidden; }
 
-/* --- HEADER & NAV --- */
-header {
-    text-align: left;
-    padding: 2rem 0 3rem;
-    width: 90%;
-    max-width: 1600px;
-    margin: 0 auto;
-}
-
-.header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-    gap: 16px;
-    flex-wrap: wrap;
-}
-
-h1 a { color: inherit; text-decoration: none; }
-h1 a:hover { opacity: 0.75; }
-
-h1 {
-    font-family: var(--font-display);
-    font-weight: 300;
-    letter-spacing: -2px;
-    margin: 0 0 10px 0;
-    font-size: clamp(2rem, 6vw, 2.2rem);
-}
-
-.nav-link {
-    color: var(--text-primary);
-    text-transform: uppercase;
-    font-family: var(--font-display);
-    font-weight: 300;
-    font-style: italic;
-    letter-spacing: 1px;
-    border-bottom: 2px solid transparent;
-    transition: 0.2s;
-    text-decoration: none;
-}
-.nav-link:hover { border-bottom-color: var(--text-primary); }
+/* Header & nav: shared .page-header component in theme.css */
 
 /* --- FEATURED SECTION --- */
 .featured-wrapper {
@@ -428,7 +389,6 @@ h1 {
 
 /* --- RESPONSIVE --- */
 @media (max-width: 800px) {
-    h1 { font-size: clamp(2rem, 10vw, 3rem); }
     .featured-content { flex-direction: column; align-items: center; text-align: center; gap: 20px; }
     .control-wrapper { flex-direction: column; gap: 10px; align-items: flex-start; }
     .tabs-container { max-width: 100%; width: 100%; }

@@ -21,32 +21,6 @@
             padding: 0;
         }
 
-        header {
-            text-align: left;
-            padding: 2rem 5% 3rem; 
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif; 
-            font-weight: 300;
-            letter-spacing: -2px;
-            margin: 0 0 10px 0;
-            font-size: clamp(2rem, 6vw, 2.2rem);
-        }   
-
-        .back-link {
-            color: var(--text-primary);
-            text-transform: uppercase;
-            font-family: 'Playfair Display', serif;
-            font-weight: 300;
-            font-style: italic;
-            letter-spacing: 1px;
-            border-bottom: 2px solid transparent;
-            transition: 0.2s;
-        }
-
         .dashboard {
             max-width: 1400px;
             margin: 0 auto 50px auto;
@@ -170,9 +144,11 @@
     <!-- Floating poster tooltip -->
     <div id="poster-tooltip"><img id="poster-tooltip-img" src="" alt=""></div>
 
-    <header>
-        <h1>Movie Analytics</h1>
-        <a href="index.html" class="back-link">← Back to Movies</a>
+    <header class="page-header">
+        <div class="header-row">
+            <h1>Movie Analytics</h1>
+            <a href="index.html" class="nav-link">← Back to Movies</a>
+        </div>
     </header>
 
     <div class="dashboard">

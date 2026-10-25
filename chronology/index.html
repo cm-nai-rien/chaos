@@ -18,21 +18,12 @@ html,body{height:100%}
 body{margin:0;display:flex;flex-direction:column;background:var(--paper);color:var(--ink);font-family:var(--body);overflow:hidden;
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='240' height='240'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .35 0 0 0 0 .25 0 0 0 0 .12 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");}
 
-.site-switch{color:var(--ink)}
-/* Header: same structure and type as the Movies and Books pages (assets/list.css) */
-header{text-align:left;padding:2rem 0 1.4rem;width:90%;max-width:1600px;margin:0 auto}
-.header-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px;flex-wrap:wrap}
-h1{font-family:var(--font-display);font-weight:300;letter-spacing:-2px;margin:0 0 10px 0;font-size:clamp(2rem,6vw,2.2rem)}
-h1 a{color:inherit;text-decoration:none}
-h1 a:hover{opacity:.75}
+/* light page: ink instead of parchment for the shared header and switch */
+body{--text-primary:var(--ink)}
+.page-header{padding-bottom:1.4rem}
 .sub{margin:0;font-size:.95rem;font-weight:300;line-height:1.5;max-width:620px}
 .sub .count{color:var(--ink-soft)}
 
-/* Axis switch */
-.modes{display:flex;gap:4px;font-size:.75rem;letter-spacing:1.5px;text-transform:uppercase}
-.modes button{background:none;border:1px solid transparent;color:var(--ink);font:inherit;letter-spacing:inherit;padding:6px 12px;cursor:pointer;opacity:.55;transition:opacity .2s,border-color .2s}
-.modes button:hover{opacity:1}
-.modes button.active{opacity:1;border-color:currentColor}
 
 #viewport{position:relative;flex:1;overflow:hidden;touch-action:none;cursor:grab;border-top:1px solid rgba(61,36,9,.15)}
 #viewport.panning{cursor:grabbing}
@@ -64,14 +55,16 @@ svg.over{pointer-events:none}
 .thread.on{stroke-width:2.8}
 .tlab.on,.tlab-bg.on{display:inline}
 .hide-fact .fact{display:none!important} .hide-mine .mine{display:none!important}
-.legend{position:absolute;display:flex;gap:36px;font-size:20px;font-weight:300;white-space:nowrap;z-index:6;cursor:auto}
+.legend{position:absolute;visibility:hidden;display:flex;gap:36px;font-size:20px;font-weight:300;white-space:nowrap;z-index:6;cursor:auto}
 .legend label{display:flex;align-items:center;gap:10px;cursor:pointer;user-select:none}
 .legend input{accent-color:var(--ink);width:18px;height:18px}
 .sw{display:inline-block;width:40px;height:0;border-top:2.5px solid}
 .sw.fact{border-color:var(--thread)} .sw.mine{border-color:var(--mine);border-top-style:dashed}
 
 .card{position:absolute;left:0;top:0;cursor:pointer}
-.moving .card{transition:transform var(--move),opacity .2s;will-change:transform}
+.card.anim{transition:transform var(--move);will-change:transform}
+.moving .card .ph{box-shadow:none}
+.moving .card .tip{display:none}
 .card .ph{position:absolute;inset:0;background:#fff;padding:3px;box-shadow:0 1px 3px rgba(61,36,9,.25)}
 .card img{display:block;width:100%;height:100%;object-fit:cover;pointer-events:none;-webkit-user-drag:none;background:var(--paper-2)}
 .card .ph.tape::before{content:"";position:absolute;left:50%;top:-8px;width:40px;height:15px;transform:translateX(-50%) rotate(-4deg);background:var(--tape)}
@@ -120,12 +113,12 @@ aside li b{font-weight:500}
   <a href="../" class="site-switch-home">Chao's Lists</a>
   <div class="site-switch-tabs"><a href="../movies/"><span class="swatch swatch-movies"></span>Movies</a><a href="../books/"><span class="swatch swatch-books"></span>Books</a><a href="../chronology/" class="active" aria-current="page"><span class="swatch swatch-chrono"></span>Chronology</a></div>
 </nav>
-<header>
+<header class="page-header">
   <div class="header-row">
     <h1><a href="./">Chao's Chronology</a></h1>
-    <div class="modes" role="group" aria-label="Arrange by">
-      <button type="button" data-mode="met" class="active">When I read / watched it</button>
-      <button type="button" data-mode="made">When it was made</button>
+    <div class="nav-links modes" role="group" aria-label="Arrange by">
+      <button type="button" class="nav-link active" data-mode="met" aria-pressed="true">When I read / watched it</button>
+      <button type="button" class="nav-link" data-mode="made" aria-pressed="false">When it was made</button>
     </div>
   </div>
   <p class="sub">Everything I've read or watched, hung on the day I met it. Switch the timeline to see when each work was made. <span class="count" id="count"></span></p>
@@ -321,7 +314,7 @@ function build({nodes:NODES, threads:THREADS}){
     stage.appendChild(c); n.card = c; n.imgEl = c.querySelector('img'); n.ph = c.querySelector('.ph');
   });
   const legend = document.getElementById('legend');
-  legend.style.left = (START - 60) + 'px'; legend.style.top = (filmFoot + 30) + 'px';
+  legend.style.left = (START - 60) + 'px'; legend.style.top = (filmFoot + 30) + 'px'; legend.style.visibility = 'visible';
 
   // threads layer
   const over = el('svg', {class:'layer over', width:W, height:H, viewBox:`0 0 ${W} ${H}`}); stage.appendChild(over);
@@ -378,15 +371,20 @@ function build({nodes:NODES, threads:THREADS}){
   function setMode(m, animate = true){
     if (m === mode && animate) return;
     mode = m;
-    document.querySelectorAll('.modes button').forEach(b => b.classList.toggle('active', b.dataset.mode === m));
+    document.querySelectorAll('.modes button').forEach(b => { b.classList.toggle('active', b.dataset.mode === m); b.setAttribute('aria-pressed', b.dataset.mode === m); });
     axisG.met.classList.toggle('off', m !== 'met'); axisG.made.classList.toggle('off', m !== 'made');
     if (!animate){ positionCards(); drawThreads(); drawRereads(); return; }
     gTh.classList.add('hidden'); gLead.replaceChildren();
     stage.classList.add('moving');
+    // only cards that are on screen before or after the move get the animation
+    const onScreen = (cx, top) => { const sx = cx * view.s + view.x, sy = top * view.s + view.y; return sx > -150 && sx < vp.clientWidth + 150 && sy > -150 && sy < vp.clientHeight + 150; };
+    const to = L[m].pos;
+    NODES.forEach(n => n.card.classList.toggle('anim', onScreen(n.cx, n.top) || onScreen(to.get(n).cx, to.get(n).top)));
     requestAnimationFrame(() => { positionCards(); loadVisible(); });
     clearTimeout(moveTimer);
     moveTimer = setTimeout(() => {
       stage.classList.remove('moving');
+      NODES.forEach(n => n.card.classList.remove('anim'));
       drawThreads(); drawRereads(); gTh.classList.remove('hidden'); loadVisible();
     }, 1250);
   }

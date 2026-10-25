@@ -21,34 +21,6 @@
             padding: 0;
         }
 
-        header {
-            text-align: left;
-            padding: 2rem 5% 3rem;
-            max-width: 1600px;
-            margin: 0 auto;
-        }
-
-        h1 {
-            font-family: 'Playfair Display', serif;
-            font-weight: 300;
-            letter-spacing: -2px;
-            margin: 0 0 10px 0;
-            font-size: clamp(2rem, 6vw, 2.2rem);
-        }
-
-        .back-link {
-            color: var(--text-primary);
-            text-transform: uppercase;
-            font-family: 'Playfair Display', serif;
-            font-weight: 300;
-            font-style: italic;
-            letter-spacing: 1px;
-            border-bottom: 2px solid transparent;
-            transition: 0.2s;
-            text-decoration: none;
-        }
-        .back-link:hover { border-bottom-color: var(--text-primary); }
-
         .dashboard {
             max-width: 1400px;
             margin: 0 auto 50px auto;
@@ -126,9 +98,11 @@
         <div class="site-switch-tabs"><a href="../movies/"><span class="swatch swatch-movies"></span>Movies</a><a href="../books/" class="active" aria-current="page"><span class="swatch swatch-books"></span>Books</a><a href="../chronology/"><span class="swatch swatch-chrono"></span>Chronology</a></div>
     </nav>
 
-    <header>
-        <h1>Book Analytics</h1>
-        <a href="index.html" class="back-link">← Back to Books</a>
+    <header class="page-header">
+        <div class="header-row">
+            <h1>Book Analytics</h1>
+            <a href="index.html" class="nav-link">← Back to Books</a>
+        </div>
     </header>
 
     <div class="dashboard">
